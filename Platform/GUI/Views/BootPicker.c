@@ -6,6 +6,7 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/OcBootManagementLib.h>
 
 #include "../GUI.h"
 #include "../BmfLib.h"
@@ -717,9 +718,7 @@ GLOBAL_REMOVE_IF_UNREFERENCED GUI_OBJ mBootPickerView = {
 RETURN_STATUS
 BootPickerEntriesAdd (
   IN CONST BOOT_PICKER_GUI_CONTEXT  *GuiContext,
-  IN CONST CHAR16                   *Name,
-  IN VOID                           *EntryContext,
-  IN BOOLEAN                        IsExternal,
+  IN OC_BOOT_ENTRY                  *Entry,
   IN BOOLEAN                        Default
   )
 {
@@ -729,7 +728,7 @@ BootPickerEntriesAdd (
   CONST GUI_VOLUME_ENTRY *PrevEntry;
 
   ASSERT (GuiContext != NULL);
-  ASSERT (Name != NULL);
+  ASSERT (Entry != NULL);
 
   VolumeEntry = AllocateZeroPool (sizeof (*VolumeEntry));
   if (VolumeEntry == NULL) {
@@ -739,17 +738,19 @@ BootPickerEntriesAdd (
   Result = GuiGetLabel (
              &VolumeEntry->Label,
              &GuiContext->FontContext,
-             Name,
-             StrLen (Name)
+             Entry->Name,
+             StrLen (Entry->Name)
              );
   if (!Result) {
     DEBUG ((DEBUG_WARN, "BMF: label failed\n"));
     return RETURN_UNSUPPORTED;
   }
 
-  VolumeEntry->Context = EntryContext;
+  VolumeEntry->Context = Entry;
 
-  if (!IsExternal) {
+  if (Entry->Type == OcBootCustom || Entry->Type == OcBootSystem) {
+    VolumeEntry->EntryIcon = &GuiContext->EntryIconTool;
+  } else if (!Entry->IsExternal) {
     VolumeEntry->EntryIcon = &GuiContext->EntryIconInternal;
   } else {
     VolumeEntry->EntryIcon = &GuiContext->EntryIconExternal;

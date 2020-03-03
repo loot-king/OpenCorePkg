@@ -5,6 +5,7 @@ typedef struct {
   GUI_CLICK_IMAGE  EntrySelector;
   GUI_IMAGE        EntryIconInternal;
   GUI_IMAGE        EntryIconExternal;
+  GUI_IMAGE        EntryIconTool;
   GUI_IMAGE        EntryBackSelected;
   GUI_IMAGE        Cursor;
   GUI_FONT_CONTEXT FontContext;
@@ -23,9 +24,7 @@ BootPickerViewInitialize (
 RETURN_STATUS
 BootPickerEntriesAdd (
   IN CONST BOOT_PICKER_GUI_CONTEXT  *GuiContext,
-  IN CONST CHAR16                   *Name,
-  IN VOID                           *EntryContext,
-  IN BOOLEAN                        IsExternal,
+  IN OC_BOOT_ENTRY                  *Entry,
   IN BOOLEAN                        Default
   );
 

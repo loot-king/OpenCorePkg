@@ -54,8 +54,11 @@ LoadImageFromStorage (
   UINT32        ImageSize;
   RETURN_STATUS Status;
   ImageData = OcStorageReadFileUnicode(Storage, ImageFilePath, &ImageSize);
-  Status  = GuiPngToImage (Image, ImageData, ImageSize);
+  Status = GuiPngToImage (Image, ImageData, ImageSize);
   FreePool(ImageData);
+  if (RETURN_ERROR(Status)) {
+    DEBUG((DEBUG_WARN, "Failed to load %s\n", ImageFilePath));
+  }
   return Status;
 }
 
@@ -72,8 +75,11 @@ LoadClickImageFromStorage (
   UINT32        ImageSize;
   RETURN_STATUS Status;
   ImageData = OcStorageReadFileUnicode(Storage, ImageFilePath, &ImageSize);
-  Status  = GuiPngToClickImage (Image, ImageData, ImageSize, HighlightPixel);
+  Status = GuiPngToClickImage (Image, ImageData, ImageSize, HighlightPixel);
   FreePool(ImageData);
+  if (RETURN_ERROR(Status)) {
+    DEBUG((DEBUG_WARN, "Failed to load %s\n", ImageFilePath));
+  }
   return Status;
 }
 
@@ -100,8 +106,10 @@ InternalContextConstruct (
   Status |= LoadClickImageFromStorage(Storage, L"Icons\\Selector.png", &Context->EntrySelector, &HighlightPixel);
   Status |= LoadImageFromStorage(Storage, L"Icons\\InternalHardDrive.png", &Context->EntryIconInternal);
   Status |= LoadImageFromStorage(Storage, L"Icons\\ExternalHardDrive.png", &Context->EntryIconExternal);
+  Status |= LoadImageFromStorage(Storage, L"Icons\\Tool.png", &Context->EntryIconTool);
 
   if (RETURN_ERROR (Status)) {
+    DEBUG((DEBUG_ERROR, "Failed to load image\n"));
     InternalContextDestruct (Context);
     return RETURN_UNSUPPORTED;
   }
