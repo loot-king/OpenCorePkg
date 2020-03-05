@@ -1367,10 +1367,9 @@ GuiGetInterpolatedValue (
   UINT32 DeltaTime;
 
   ASSERT (Interpol != NULL);
-  ASSERT (Interpol->StartTime <= CurrentTime);
   ASSERT (Interpol->Duration > 0);
 
-  if (CurrentTime == Interpol->StartTime) {
+  if (CurrentTime <= Interpol->StartTime) {
     return Interpol->StartValue;
   }
 

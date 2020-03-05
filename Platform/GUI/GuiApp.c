@@ -107,6 +107,11 @@ InternalContextConstruct (
   Status |= LoadImageFromStorage(Storage, L"Icons\\InternalHardDrive.png", &Context->EntryIconInternal);
   Status |= LoadImageFromStorage(Storage, L"Icons\\ExternalHardDrive.png", &Context->EntryIconExternal);
   Status |= LoadImageFromStorage(Storage, L"Icons\\Tool.png", &Context->EntryIconTool);
+  Status |= LoadImageFromStorage(Storage, L"Icons\\ToolbarPoof1128x128.png", &Context->Poof[0]);
+  Status |= LoadImageFromStorage(Storage, L"Icons\\ToolbarPoof2128x128.png", &Context->Poof[1]);
+  Status |= LoadImageFromStorage(Storage, L"Icons\\ToolbarPoof3128x128.png", &Context->Poof[2]);
+  Status |= LoadImageFromStorage(Storage, L"Icons\\ToolbarPoof4128x128.png", &Context->Poof[3]);
+  Status |= LoadImageFromStorage(Storage, L"Icons\\ToolbarPoof5128x128.png", &Context->Poof[4]);
 
   if (RETURN_ERROR (Status)) {
     DEBUG((DEBUG_ERROR, "Failed to load image\n"));

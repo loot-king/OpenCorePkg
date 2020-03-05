@@ -6,6 +6,7 @@ typedef struct {
   GUI_IMAGE        EntryIconInternal;
   GUI_IMAGE        EntryIconExternal;
   GUI_IMAGE        EntryIconTool;
+  GUI_IMAGE        Poof[5];
   GUI_IMAGE        EntryBackSelected;
   GUI_IMAGE        Cursor;
   GUI_FONT_CONTEXT FontContext;
