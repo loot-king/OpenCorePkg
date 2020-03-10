@@ -7,6 +7,7 @@
 #include <Library/DebugLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/OcBootManagementLib.h>
+#include <Library/OcPngLib.h>
 
 #include "../GUI.h"
 #include "../BmfLib.h"
@@ -410,7 +411,11 @@ InternalBootPickerEntryDraw (
   ASSERT (Context != NULL);
 
   Entry       = BASE_CR (This, GUI_VOLUME_ENTRY, Hdr.Obj);
-  EntryIcon   = Entry->EntryIcon;
+  if (mBootPickerImageIndex != 0xFF) {
+    EntryIcon = &((BOOT_PICKER_GUI_CONTEXT *) DrawContext->GuiContext)->Poof[mBootPickerImageIndex];
+  } else {
+    EntryIcon   = Entry->EntryIcon;
+  }
   Label       = &Entry->Label;
 
   ASSERT (This->Width  == BOOT_ENTRY_DIMENSION);
@@ -438,8 +443,8 @@ InternalBootPickerEntryDraw (
   //
   // Draw the label horizontally centered.
   //
-  ASSERT (Label->Width  <= BOOT_ENTRY_DIMENSION);
-  ASSERT (Label->Height == BOOT_ENTRY_LABEL_HEIGHT);
+  //ASSERT (Label->Width  <= BOOT_ENTRY_DIMENSION);
+  //ASSERT (Label->Height == BOOT_ENTRY_LABEL_HEIGHT);
 
   GuiDrawChildImage (
     Label,
@@ -448,7 +453,7 @@ InternalBootPickerEntryDraw (
     BaseX,
     BaseY,
     (BOOT_ENTRY_DIMENSION - Label->Width) / 2,
-    BOOT_ENTRY_DIMENSION + BOOT_ENTRY_LABEL_SPACE,
+    BOOT_ENTRY_DIMENSION + BOOT_ENTRY_LABEL_SPACE + BOOT_ENTRY_LABEL_HEIGHT - Label->Height,
     OffsetX,
     OffsetY,
     Width,
@@ -715,6 +720,59 @@ GLOBAL_REMOVE_IF_UNREFERENCED GUI_OBJ mBootPickerView = {
   INITIALIZE_LIST_HEAD_VARIABLE (mBootPicker.Hdr.Link)
 };
 
+STATIC
+UINT8
+AppleDiskLabelImagePalette[256] = {
+  [0x00] = 255,
+  [0xf6] = 238,
+  [0xf7] = 221,
+  [0x2a] = 204,
+  [0xf8] = 187,
+  [0xf9] = 170,
+  [0x55] = 153,
+  [0xfa] = 136,
+  [0xfb] = 119,
+  [0x80] = 102,
+  [0xfc] = 85,
+  [0xfd] = 68,
+  [0xab] = 51,
+  [0xfe] = 34,
+  [0xff] = 17,
+  [0xd6] = 0
+};
+
+STATIC
+EFI_STATUS
+DecodeAppleDiskLabelImage (
+  IN  UINT8     *RawData,
+  IN  UINT32    DataLength,
+  OUT GUI_IMAGE *Image
+  )
+{
+  UINT32 PixelIdx;
+
+  if (RawData == NULL || DataLength < 5) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Image->Width = RawData[1] << 8 | RawData[2];
+  Image->Height = RawData[3] << 8 | RawData[4];
+  Image->Buffer = (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *) AllocatePool(Image->Width * Image->Height * sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL));
+
+  if (DataLength != 5 + Image->Width * Image->Height) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  for (PixelIdx = 0; PixelIdx < Image->Width * Image->Height; PixelIdx++) {
+    Image->Buffer[PixelIdx].Blue     = 255 - AppleDiskLabelImagePalette[RawData[5 + PixelIdx]];
+    Image->Buffer[PixelIdx].Green    = 255 - AppleDiskLabelImagePalette[RawData[5 + PixelIdx]];
+    Image->Buffer[PixelIdx].Red      = 255 - AppleDiskLabelImagePalette[RawData[5 + PixelIdx]];
+    Image->Buffer[PixelIdx].Reserved = 255;
+  }
+  return EFI_SUCCESS;
+}
+
+
 RETURN_STATUS
 BootPickerEntriesAdd (
   IN CONST BOOT_PICKER_GUI_CONTEXT  *GuiContext,
@@ -722,10 +780,14 @@ BootPickerEntriesAdd (
   IN BOOLEAN                        Default
   )
 {
+  APPLE_BOOT_POLICY_PROTOCOL *AppleBootPolicy;
   BOOLEAN                Result;
   GUI_VOLUME_ENTRY       *VolumeEntry;
   LIST_ENTRY             *ListEntry;
   CONST GUI_VOLUME_ENTRY *PrevEntry;
+  UINT32                 IconFileSize;
+  VOID                   *IconFileData;
+  GUI_IMAGE              *EntryIcon;
 
   ASSERT (GuiContext != NULL);
   ASSERT (Entry != NULL);
@@ -735,21 +797,36 @@ BootPickerEntriesAdd (
     return RETURN_OUT_OF_RESOURCES;
   }
 
+  AppleBootPolicy = OcAppleBootPolicyInstallProtocol (FALSE);
+  if (AppleBootPolicy == NULL) {
+    DEBUG ((DEBUG_ERROR, "OCB: AppleBootPolicy locate failure\n"));
+    return EFI_NOT_FOUND;
+  }
+
+  // FIXME: scale
+  if (EFI_SUCCESS == OcGetBootEntryLabelImage(AppleBootPolicy, Entry, 1, &IconFileData, &IconFileSize) &&
+      EFI_SUCCESS == DecodeAppleDiskLabelImage(IconFileData, IconFileSize, &VolumeEntry->Label)) {
+  } else {
   Result = GuiGetLabel (
-             &VolumeEntry->Label,
-             &GuiContext->FontContext,
-             Entry->Name,
-             StrLen (Entry->Name)
-             );
-  if (!Result) {
-    DEBUG ((DEBUG_WARN, "BMF: label failed\n"));
-    return RETURN_UNSUPPORTED;
+               &VolumeEntry->Label,
+               &GuiContext->FontContext,
+               Entry->Name,
+               StrLen (Entry->Name)
+               );
+    if (!Result) {
+      DEBUG ((DEBUG_WARN, "BMF: label failed\n"));
+      return RETURN_UNSUPPORTED;
+    }
   }
 
   VolumeEntry->Context = Entry;
 
   if (Entry->Type == OcBootCustom || Entry->Type == OcBootSystem) {
     VolumeEntry->EntryIcon = &GuiContext->EntryIconTool;
+  } else if (EFI_SUCCESS == OcGetBootEntryIcon(AppleBootPolicy, Entry, &IconFileData, &IconFileSize) &&
+             (EntryIcon = (GUI_IMAGE *) AllocatePool(sizeof(GUI_IMAGE))) &&
+             EFI_SUCCESS == GuiIcnsToImage128x128(EntryIcon, IconFileData, IconFileSize)) {
+    VolumeEntry->EntryIcon = EntryIcon;
   } else if (!Entry->IsExternal) {
     VolumeEntry->EntryIcon = &GuiContext->EntryIconInternal;
   } else {

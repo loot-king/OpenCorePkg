@@ -152,6 +152,14 @@ typedef struct OC_BOOT_ENTRY_ {
   // Load option data (usually "boot args").
   //
   VOID                      *LoadOptions;
+  //
+  // Path to ".VolumeIcon.icns" file, if exists.
+  //
+  EFI_DEVICE_PATH_PROTOCOL  *IconFile;
+  //
+  // Path to directory containing ".disk_label" and ".disk_label_2x" files, if exists.
+  //
+  EFI_DEVICE_PATH_PROTOCOL  *LabelImageDirectory;
 } OC_BOOT_ENTRY;
 
 /**
@@ -585,6 +593,44 @@ EFI_STATUS
 OcDescribeBootEntry (
   IN     APPLE_BOOT_POLICY_PROTOCOL *BootPolicy,
   IN OUT OC_BOOT_ENTRY              *BootEntry
+  );
+
+/**
+  Get '.disk_label' or '.disk_label_2x' file contents, if exists.
+
+  @param[in]  BootPolicy     Apple Boot Policy Protocol.
+  @param[in]  BootEntry      Located boot entry.
+  @param[in]  Scale          User interface scale.
+  @param[out]  ImageData          FIle contents.
+  @param[out]  DataLength          File length.
+
+  @retval EFI_SUCCESS          The file was read successfully.
+**/
+EFI_STATUS
+OcGetBootEntryLabelImage (
+  IN  APPLE_BOOT_POLICY_PROTOCOL *BootPolicy,
+  IN  OC_BOOT_ENTRY              *BootEntry,
+  IN  UINT32                     Scale,
+  OUT VOID                       **ImageData,
+  OUT UINT32                     *DataLength
+  );
+
+/**
+  Get '.VolumeIcon.icns' file contents, if exists.
+
+  @param[in]  BootPolicy     Apple Boot Policy Protocol.
+  @param[in]  BootEntry      Located boot entry.
+  @param[out]  ImageData          FIle contents.
+  @param[out]  DataLength          File length.
+
+  @retval EFI_SUCCESS          The file was read successfully.
+**/
+EFI_STATUS
+OcGetBootEntryIcon (
+  IN  APPLE_BOOT_POLICY_PROTOCOL *BootPolicy,
+  IN  OC_BOOT_ENTRY              *BootEntry,
+  OUT VOID                       **ImageData,
+  OUT UINT32                     *DataLength
   );
 
 /**

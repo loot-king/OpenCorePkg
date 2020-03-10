@@ -131,6 +131,112 @@ OcDescribeBootEntry (
   return EFI_SUCCESS;
 }
 
+// .disk_label is read from the directory which contains the booter
+// .VolumeIcon.icns is read from the volume root
+
+EFI_STATUS
+OcGetBootEntryLabelImage (
+  IN  APPLE_BOOT_POLICY_PROTOCOL *BootPolicy,
+  IN  OC_BOOT_ENTRY              *BootEntry,
+  IN  UINT32                     Scale,
+  OUT VOID                       **ImageData,
+  OUT UINT32                     *DataLength
+  )
+{
+  EFI_STATUS                       Status;
+  CHAR16                           *BootDirectoryName;
+  EFI_HANDLE                       Device;
+  EFI_HANDLE                       ApfsVolumeHandle;
+  EFI_SIMPLE_FILE_SYSTEM_PROTOCOL  *FileSystem;
+
+  *ImageData = NULL;
+  *DataLength = 0;
+
+  //
+  // Custom entries have no special label.
+  //
+  if (BootEntry->Type == OcBootCustom) {
+    return EFI_NOT_FOUND;
+  }
+
+  Status = BootPolicy->DevicePathToDirPath (
+    BootEntry->DevicePath,
+    &BootDirectoryName,
+    &Device,
+    &ApfsVolumeHandle
+    );
+
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  Status = gBS->HandleProtocol (
+    Device,
+    &gEfiSimpleFileSystemProtocolGuid,
+    (VOID **) &FileSystem
+    );
+
+  if (EFI_ERROR (Status)) {
+    FreePool (BootDirectoryName);
+    return Status;
+  }
+
+  if (Scale == 2) {
+    return InternalGetAppleDiskLabelImage (FileSystem, BootDirectoryName, L".disk_label_2x", ImageData, DataLength);
+  }
+  return InternalGetAppleDiskLabelImage (FileSystem, BootDirectoryName, L".disk_label", ImageData, DataLength);
+}
+
+EFI_STATUS
+OcGetBootEntryIcon (
+  IN  APPLE_BOOT_POLICY_PROTOCOL *BootPolicy,
+  IN  OC_BOOT_ENTRY              *BootEntry,
+  OUT VOID                       **ImageData,
+  OUT UINT32                     *DataLength
+  )
+{
+  EFI_STATUS                       Status;
+  CHAR16                           *BootDirectoryName;
+  EFI_HANDLE                       Device;
+  EFI_HANDLE                       ApfsVolumeHandle;
+  EFI_SIMPLE_FILE_SYSTEM_PROTOCOL  *FileSystem;
+
+  *ImageData = NULL;
+  *DataLength = 0;
+
+  //
+  // Custom entries have no special icon.
+  //
+  if (BootEntry->Type == OcBootCustom) {
+    return EFI_NOT_FOUND;
+  }
+
+  Status = BootPolicy->DevicePathToDirPath (
+    BootEntry->DevicePath,
+    &BootDirectoryName,
+    &Device,
+    &ApfsVolumeHandle
+    );
+
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  Status = gBS->HandleProtocol (
+    Device,
+    &gEfiSimpleFileSystemProtocolGuid,
+    (VOID **) &FileSystem
+    );
+
+  if (EFI_ERROR (Status)) {
+    FreePool (BootDirectoryName);
+    return Status;
+  }
+
+  return InternalGetAppleDiskLabelImage (FileSystem, L"\\", L".VolumeIcon.icns", ImageData, DataLength);
+}
+
+
 VOID
 OcResetBootEntry (
   IN OUT OC_BOOT_ENTRY              *BootEntry

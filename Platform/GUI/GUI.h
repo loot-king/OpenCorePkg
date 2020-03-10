@@ -134,6 +134,13 @@ GuiPngToImage (
   IN     UINTN      BmpImageSize
   );
 
+RETURN_STATUS
+GuiIcnsToImage128x128 (
+  IN OUT GUI_IMAGE  *Image,
+  IN     VOID       *IcnsImage,
+  IN     UINTN      IcnsImageSize
+  );
+
 VOID
 GuiObjDrawDelegate (
   IN OUT GUI_OBJ              *This,

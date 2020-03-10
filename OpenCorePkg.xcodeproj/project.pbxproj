@@ -2218,6 +2218,7 @@
 					"$(SRCROOT)/UDK/Build/OpenCorePkg/RELEASE_XCODE5/X64/OpenCorePkg/Platform/OpenCore/OpenCore/DEBUG/AutoGen.h",
 					"-include",
 					"$(SRCROOT)/UDK/MdePkg/Include/Uefi.h",
+					"-fshort-wchar",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -2249,6 +2250,7 @@
 					"$(SRCROOT)/UDK/Build/OpenCorePkg/RELEASE_XCODE5/X64/OpenCorePkg/Platform/OpenCore/OpenCore/DEBUG/AutoGen.h",
 					"-include",
 					"$(SRCROOT)/UDK/MdePkg/Include/Uefi.h",
+					"-fshort-wchar",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
