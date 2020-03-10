@@ -1248,13 +1248,13 @@ GuiIcnsToImage128x128 (
      && ImageData[Index + 1] == 'c'
      && ImageData[Index + 2] == '0'
      && ImageData[Index + 3] == '7') {
-      return GuiPngToImage(Image, IcnsImage + Index + 8, RecordLength - 8));
+      return GuiPngToImage(Image, IcnsImage + Index + 8, RecordLength - 8);
     } else if (mUIScale == 2
      && ImageData[Index    ] == 'i'
      && ImageData[Index + 1] == 'c'
      && ImageData[Index + 2] == '1'
      && ImageData[Index + 3] == '3') {
-      return GuiPngToImage(Image, IcnsImage + Index + 8, RecordLength - 8));
+      return GuiPngToImage(Image, IcnsImage + Index + 8, RecordLength - 8);
     }
     Index += RecordLength;
   }
