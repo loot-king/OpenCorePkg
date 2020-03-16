@@ -20,6 +20,7 @@
 #include <IndustryStandard/AppleHid.h>
 #include <Library/OcAppleBootPolicyLib.h>
 #include <Library/OcStringLib.h>
+#include <Library/OcStorageLib.h>
 #include <Protocol/AppleKeyMapAggregator.h>
 #include <Protocol/LoadedImage.h>
 #include <Protocol/AppleBeepGen.h>
@@ -569,6 +570,10 @@ struct OC_PICKER_CONTEXT_ {
   //
   UINT32                     AllCustomEntryCount;
   //
+  // Storage
+  //
+  OC_STORAGE_CONTEXT         *Storage;
+  //
   // Custom picker entries.  Absolute entries come first.
   //
   OC_PICKER_ENTRY            CustomEntries[];
@@ -608,6 +613,7 @@ OcDescribeBootEntry (
 **/
 EFI_STATUS
 OcGetBootEntryLabelImage (
+  IN  OC_PICKER_CONTEXT          *Context,
   IN  APPLE_BOOT_POLICY_PROTOCOL *BootPolicy,
   IN  OC_BOOT_ENTRY              *BootEntry,
   IN  UINT32                     Scale,

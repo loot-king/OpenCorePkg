@@ -6,6 +6,12 @@ typedef struct {
   GUI_IMAGE        EntryIconInternal;
   GUI_IMAGE        EntryIconExternal;
   GUI_IMAGE        EntryIconTool;
+  GUI_IMAGE        EntryLabelEFIBoot;
+  GUI_IMAGE        EntryLabelWindows;
+  GUI_IMAGE        EntryLabelRecovery;
+  GUI_IMAGE        EntryLabelMacOS;
+  GUI_IMAGE        EntryLabelTool;
+  GUI_IMAGE        EntryLabelResetNVRAM;
   GUI_IMAGE        Poof[5];
   GUI_IMAGE        EntryBackSelected;
   GUI_IMAGE        Cursor;
@@ -13,6 +19,7 @@ typedef struct {
   VOID             *BootEntry;
   BOOLEAN          HideAuxiliary;
   BOOLEAN          Refresh;
+  UINT32           Scale;
 } BOOT_PICKER_GUI_CONTEXT;
 
 RETURN_STATUS
@@ -24,6 +31,7 @@ BootPickerViewInitialize (
 
 RETURN_STATUS
 BootPickerEntriesAdd (
+  IN OC_PICKER_CONTEXT              *Context,
   IN CONST BOOT_PICKER_GUI_CONTEXT  *GuiContext,
   IN OC_BOOT_ENTRY                  *Entry,
   IN BOOLEAN                        Default

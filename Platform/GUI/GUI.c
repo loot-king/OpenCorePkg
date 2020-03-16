@@ -9,9 +9,6 @@
 #include <Library/OcPngLib.h>
 #include <Library/TimerLib.h>
 #include <Library/UefiBootServicesTableLib.h>
-#include <Library/UefiRuntimeServicesTableLib.h>
-
-#include <Guid/AppleVariable.h>
 
 #include "GUI.h"
 #include "GuiIo.h"
@@ -919,10 +916,6 @@ GuiGetTSCFrequency (
   VOID
   );
 
-STATIC
-UINT32
-mUIScale;
-
 EFI_STATUS
 GuiLibConstruct (
   IN UINT32  CursorDefaultX,
@@ -930,23 +923,6 @@ GuiLibConstruct (
   )
 {
   CONST EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *OutputInfo;
-  EFI_STATUS  Status;
-  UINTN       UiScaleSize;
-
-  UiScaleSize = sizeof (mUIScale);
-
-  Status = gRT->GetVariable (
-    APPLE_UI_SCALE_VARIABLE_NAME,
-    &gAppleVendorVariableGuid,
-    NULL,
-    &UiScaleSize,
-    (VOID *) &mUIScale
-    );
-
-  if (EFI_ERROR (Status) || mUIScale != 2) {
-    mUIScale = 1;
-  }
-
 
   mOutputContext = GuiOutputConstruct ();
   if (mOutputContext == NULL) {
@@ -1223,7 +1199,8 @@ RETURN_STATUS
 GuiIcnsToImage128x128 (
   IN OUT GUI_IMAGE  *Image,
   IN     VOID       *IcnsImage,
-  IN     UINTN      IcnsImageSize
+  IN     UINTN      IcnsImageSize,
+  IN     UINT32     Scale
   )
 {
   UINTN Index;
@@ -1243,13 +1220,13 @@ GuiIcnsToImage128x128 (
                  | ImageData[Index + 5] << 16
                  | ImageData[Index + 6] << 8
                  | ImageData[Index + 7];
-    if (mUIScale == 1
+    if (Scale == 1
      && ImageData[Index    ] == 'i'
      && ImageData[Index + 1] == 'c'
      && ImageData[Index + 2] == '0'
      && ImageData[Index + 3] == '7') {
       return GuiPngToImage(Image, IcnsImage + Index + 8, RecordLength - 8);
-    } else if (mUIScale == 2
+    } else if (Scale == 2
      && ImageData[Index    ] == 'i'
      && ImageData[Index + 1] == 'c'
      && ImageData[Index + 2] == '1'

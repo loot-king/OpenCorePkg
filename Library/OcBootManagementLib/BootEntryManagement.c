@@ -24,6 +24,7 @@
 #include <Library/OcFileLib.h>
 #include <Library/OcStringLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Library/PrintLib.h>
 
 EFI_STATUS
 OcDescribeBootEntry (
@@ -134,8 +135,14 @@ OcDescribeBootEntry (
 // .disk_label is read from the directory which contains the booter
 // .VolumeIcon.icns is read from the volume root
 
+#define OPEN_CORE_ROOT_PATH        L"EFI\\OC"
+
+#define OPEN_CORE_TOOL_PATH        L"Tools\\"
+
+
 EFI_STATUS
 OcGetBootEntryLabelImage (
+  IN  OC_PICKER_CONTEXT          *Context,
   IN  APPLE_BOOT_POLICY_PROTOCOL *BootPolicy,
   IN  OC_BOOT_ENTRY              *BootEntry,
   IN  UINT32                     Scale,
@@ -145,6 +152,9 @@ OcGetBootEntryLabelImage (
 {
   EFI_STATUS                       Status;
   CHAR16                           *BootDirectoryName;
+  CHAR16                           *BootDirectoryPath;
+  UINTN                            PathLength;
+  UINTN                            BufferSize;
   EFI_HANDLE                       Device;
   EFI_HANDLE                       ApfsVolumeHandle;
   EFI_SIMPLE_FILE_SYSTEM_PROTOCOL  *FileSystem;
@@ -152,11 +162,36 @@ OcGetBootEntryLabelImage (
   *ImageData = NULL;
   *DataLength = 0;
 
-  //
-  // Custom entries have no special label.
-  //
   if (BootEntry->Type == OcBootCustom) {
-    return EFI_NOT_FOUND;
+    PathLength = StrLen(BootEntry->PathName);
+    BootDirectoryName = AllocateCopyPool(sizeof(CHAR16) * (PathLength + 1), BootEntry->PathName);
+    if (BootDirectoryName == NULL) {
+      return EFI_OUT_OF_RESOURCES;
+    }
+
+    while (PathLength > 0 && BootDirectoryName[PathLength - 1] != L'\\') {
+      PathLength--;
+    }
+
+    BootDirectoryName[PathLength] = CHAR_NULL;
+
+    BufferSize = sizeof(CHAR16) * (sizeof(OPEN_CORE_ROOT_PATH) + sizeof(OPEN_CORE_TOOL_PATH) + PathLength);
+    BootDirectoryPath = AllocatePool(BufferSize);
+    if (BootDirectoryPath == NULL) {
+      Status = EFI_OUT_OF_RESOURCES;
+    } else {
+      UnicodeSPrint(BootDirectoryPath, BufferSize, L"%s\\%s%s", OPEN_CORE_ROOT_PATH, OPEN_CORE_TOOL_PATH, BootDirectoryName);
+      Status = InternalGetAppleDiskLabelImage (
+        Context->Storage->FileSystem,
+        BootDirectoryPath,
+        Scale == 2 ? L".disk_label_2x" : L".disk_label",
+        ImageData,
+        DataLength
+        );
+      FreePool(BootDirectoryPath);
+    }
+    FreePool(BootDirectoryName);
+    return Status;
   }
 
   Status = BootPolicy->DevicePathToDirPath (
@@ -181,10 +216,13 @@ OcGetBootEntryLabelImage (
     return Status;
   }
 
-  if (Scale == 2) {
-    return InternalGetAppleDiskLabelImage (FileSystem, BootDirectoryName, L".disk_label_2x", ImageData, DataLength);
-  }
-  return InternalGetAppleDiskLabelImage (FileSystem, BootDirectoryName, L".disk_label", ImageData, DataLength);
+  return InternalGetAppleDiskLabelImage (
+    FileSystem,
+    BootDirectoryName,
+    Scale == 2 ? L".disk_label_2x" : L".disk_label",
+    ImageData,
+    DataLength
+    );
 }
 
 EFI_STATUS

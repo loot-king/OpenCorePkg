@@ -125,6 +125,7 @@ struct GUI_DRAWING_CONTEXT_ {
   GUI_EXIT_LOOP        ExitLoop;
   LIST_ENTRY           Animations;
   VOID                 *GuiContext;
+  UINT8                Scale;
 };
 
 RETURN_STATUS
@@ -138,7 +139,8 @@ RETURN_STATUS
 GuiIcnsToImage128x128 (
   IN OUT GUI_IMAGE  *Image,
   IN     VOID       *IcnsImage,
-  IN     UINTN      IcnsImageSize
+  IN     UINTN      IcnsImageSize,
+  IN     UINT32     Scale
   );
 
 VOID

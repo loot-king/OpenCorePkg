@@ -639,16 +639,6 @@
 		35C7411124055115005CB6EF /* GetTscHw.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GetTscHw.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
-/* Begin PBXFrameworksBuildPhase section */
-		354F73F622573EBF00AB1A9B /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXFrameworksBuildPhase section */
-
 /* Begin PBXGroup section */
 		3511D55D23FDB2A600CC3B17 /* Docs */ = {
 			isa = PBXGroup;
@@ -1808,7 +1798,6 @@
 			buildPhases = (
 				354F73F422573EBF00AB1A9B /* Headers */,
 				354F73F522573EBF00AB1A9B /* Sources */,
-				354F73F622573EBF00AB1A9B /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -2210,16 +2199,21 @@
 					OC_TARGET_RELEASE,
 					MDE_CPU_X64,
 				);
-				HEADER_SEARCH_PATHS = "$(SRCROOT)/UDK/**";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/UDK/MdePkg/Include/X64",
+					"$(SRCROOT)/UDK/**",
+				);
+				LINK_WITH_STANDARD_LIBRARIES = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_CFLAGS = (
 					"-fdiagnostics-absolute-paths",
 					"-include",
 					"$(SRCROOT)/UDK/Build/OpenCorePkg/RELEASE_XCODE5/X64/OpenCorePkg/Platform/OpenCore/OpenCore/DEBUG/AutoGen.h",
 					"-include",
-					"$(SRCROOT)/UDK/MdePkg/Include/Uefi.h",
+					"$(SRCROOT)/UDK/Build/OpenCorePkg/RELEASE_XCODE5/X64/OpenCorePkg/Platform/OpenCore/OpenCore/DEBUG/AutoGen.c",
 					"-fshort-wchar",
 				);
+				OTHER_LDFLAGS = "-###";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -2242,16 +2236,21 @@
 					OC_TARGET_RELEASE,
 					MDE_CPU_X64,
 				);
-				HEADER_SEARCH_PATHS = "$(SRCROOT)/UDK/**";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/UDK/MdePkg/Include/X64",
+					"$(SRCROOT)/UDK/**",
+				);
+				LINK_WITH_STANDARD_LIBRARIES = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_CFLAGS = (
 					"-fdiagnostics-absolute-paths",
 					"-include",
 					"$(SRCROOT)/UDK/Build/OpenCorePkg/RELEASE_XCODE5/X64/OpenCorePkg/Platform/OpenCore/OpenCore/DEBUG/AutoGen.h",
 					"-include",
-					"$(SRCROOT)/UDK/MdePkg/Include/Uefi.h",
+					"$(SRCROOT)/UDK/Build/OpenCorePkg/RELEASE_XCODE5/X64/OpenCorePkg/Platform/OpenCore/OpenCore/DEBUG/AutoGen.c",
 					"-fshort-wchar",
 				);
+				OTHER_LDFLAGS = "-###";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
