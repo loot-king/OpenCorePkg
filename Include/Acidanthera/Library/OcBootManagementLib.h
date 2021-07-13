@@ -52,6 +52,27 @@ typedef struct OC_HOTKEY_CONTEXT_ OC_HOTKEY_CONTEXT;
 #define OC_MENU_DISK_IMAGE           L" (dmg)"
 #define OC_MENU_SHUTDOWN             L"Shutting Down"
 #define OC_MENU_RESTART              L"Restarting"
+#define OC_MENU_SIP_IS_DISABLED      L"Toggle SIP (Disabled)"
+#define OC_MENU_SIP_IS_ENABLED       L"Toggle SIP (Enabled)"
+
+/**
+  Predefined flavours.
+**/
+#define OC_FLAVOUR_AUTO                 "Auto"
+#define OC_FLAVOUR_RESET_NVRAM          "ResetNVRAM:NVRAMTool"
+#define OC_FLAVOUR_TOGGLE_SIP           "ToggleSIP:NVRAMTool"
+#define OC_FLAVOUR_APPLE_OS             "Apple"
+#define OC_FLAVOUR_APPLE_RECOVERY       "AppleRecv:Apple"
+#define OC_FLAVOUR_APPLE_FW             "AppleRecv:Apple"
+#define OC_FLAVOUR_APPLE_TIME_MACHINE   "AppleTM:Apple"
+#define OC_FLAVOUR_WINDOWS              "Windows"
+#define OC_FLAVOUR_OTHER_OS             "Other"
+
+/**
+  Predefined flavour ids.
+**/
+#define OC_FLAVOUR_ID_RESET_NVRAM       "ResetNVRAM"
+#define OC_FLAVOUR_ID_UEFI_SHELL        "UEFIShell"
 
 /**
   Paths allowed to be accessible by the interfaces.
@@ -71,11 +92,12 @@ typedef struct OC_HOTKEY_CONTEXT_ OC_HOTKEY_CONTEXT;
 #define OC_ATTR_USE_POINTER_CONTROL      BIT4
 #define OC_ATTR_SHOW_DEBUG_DISPLAY       BIT5
 #define OC_ATTR_USE_MINIMAL_UI           BIT6
+#define OC_ATTR_USE_FLAVOUR_ICON         BIT7
 #define OC_ATTR_ALL_BITS (\
   OC_ATTR_USE_VOLUME_ICON         | OC_ATTR_USE_DISK_LABEL_FILE | \
   OC_ATTR_USE_GENERIC_LABEL_IMAGE | OC_ATTR_HIDE_THEMED_ICONS   | \
   OC_ATTR_USE_POINTER_CONTROL     | OC_ATTR_SHOW_DEBUG_DISPLAY  | \
-  OC_ATTR_USE_MINIMAL_UI )
+  OC_ATTR_USE_MINIMAL_UI          | OC_ATTR_USE_FLAVOUR_ICON )
 
 /**
   Default timeout for IDLE timeout during menu picker navigation
@@ -99,7 +121,7 @@ typedef struct OC_HOTKEY_CONTEXT_ OC_HOTKEY_CONTEXT;
 
 /**
   Operating system boot type.
-  WARNING: This is only for debug purposes.
+  This flags the inferred type, but it is not definitive and should not be relied upon for security.
 **/
 typedef UINT32 OC_BOOT_ENTRY_TYPE;
 
@@ -113,7 +135,8 @@ typedef UINT32 OC_BOOT_ENTRY_TYPE;
 #define OC_BOOT_EXTERNAL_OS         BIT6
 #define OC_BOOT_EXTERNAL_TOOL       BIT7
 #define OC_BOOT_RESET_NVRAM         BIT8
-#define OC_BOOT_SYSTEM              (OC_BOOT_RESET_NVRAM)
+#define OC_BOOT_TOGGLE_SIP          BIT9
+#define OC_BOOT_SYSTEM              (OC_BOOT_RESET_NVRAM | OC_BOOT_TOGGLE_SIP)
 
 /**
   Picker mode.
@@ -183,8 +206,12 @@ typedef struct OC_BOOT_ENTRY_ {
   //
   CHAR16                    *PathName;
   //
-  // Heuristical value signalising about booted os.
-  // WARNING: This is only for debug purposes.
+  // Content flavour.
+  //
+  CHAR8                     *Flavour;
+  //
+  // Heuristical value signaling inferred type of booted os.
+  // WARNING: Non-definitive, do not rely on for any security purposes.
   //
   OC_BOOT_ENTRY_TYPE        Type;
   //
@@ -435,29 +462,13 @@ EFI_STATUS
 typedef
 EFI_STATUS
 (EFIAPI *OC_CUSTOM_READ) (
-  IN  VOID                        *Context,
+  IN  OC_STORAGE_CONTEXT          *Storage,
   IN  OC_BOOT_ENTRY               *ChosenEntry,
   OUT VOID                        **Data,
   OUT UINT32                      *DataSize,
   OUT EFI_DEVICE_PATH_PROTOCOL    **DevicePath,
   OUT EFI_HANDLE                  *StorageHandle,
   OUT EFI_DEVICE_PATH_PROTOCOL    **StoragePath
-  );
-
-/**
-  Exposed custom entry describe interface.
-  Return allocated file buffers from pool on success.
-**/
-typedef
-EFI_STATUS
-(EFIAPI *OC_CUSTOM_DESCRIBE) (
-  IN  VOID                        *Context,
-  IN  OC_BOOT_ENTRY               *ChosenEntry,
-  IN  UINT8                       LabelScale           OPTIONAL,
-  OUT VOID                        **IconData           OPTIONAL,
-  OUT UINT32                      *IconDataSize        OPTIONAL,
-  OUT VOID                        **LabelData          OPTIONAL,
-  OUT UINT32                      *LabelDataSize       OPTIONAL
   );
 
 /**
@@ -476,6 +487,10 @@ typedef struct {
   // Entry boot arguments.
   //
   CONST CHAR8  *Arguments;
+  //
+  // Content flavour.
+  //
+  CONST CHAR8  *Flavour;
   //
   // Whether this entry is auxiliary.
   //
@@ -591,7 +606,7 @@ VOID
 typedef
 UINT64
 (EFIAPI *OC_GET_KEY_WAIT_END_TIME) (
-  IN UINTN    Timeout
+  IN UINT64     Timeout
   );
 
 /**
@@ -754,13 +769,9 @@ struct OC_PICKER_CONTEXT_ {
   //
   OC_CUSTOM_READ             CustomRead;
   //
-  // Custom entry describing routine, optional for no custom entries.
+  // Storage context.
   //
-  OC_CUSTOM_DESCRIBE         CustomDescribe;
-  //
-  // Context to pass to CustomRead and CustomDescribe, optional.
-  //
-  VOID                       *CustomEntryContext;
+  OC_STORAGE_CONTEXT         *StorageContext;
   //
   // Image starting routine used, required.
   //
@@ -831,6 +842,10 @@ struct OC_PICKER_CONTEXT_ {
   // Append the "Reset NVRAM" option to the boot entry list.
   //
   BOOLEAN                    ShowNvramReset;
+  //
+  // Append toggle SIP option to the boot entry list.
+  //
+  BOOLEAN                    ShowToggleSip;
   //
   // Allow setting default boot option from boot menu.
   //
@@ -1459,6 +1474,64 @@ OcAppendArgumentsToLoadedImage (
   IN     CONST CHAR8                **Arguments,
   IN     UINT32                     ArgumentCount,
   IN     BOOLEAN                    Replace
+  );
+
+/**
+  Get current SIP setting.
+
+  @param[out]     CsrActiveConfig    Returned csr-active-config variable; uninitialised if variable
+                                     not found, or other error.
+  @param[out]     Attributes         If not NULL, a pointer to the memory location to return the
+                                     attributes bitmask for the variable; uninitialised if variable
+                                     not found, or other error.
+
+  @retval EFI_SUCCESS, EFI_NOT_FOUND, or other error returned by called code.
+**/
+EFI_STATUS
+OcGetSip (
+  OUT UINT32 *CsrActiveConfig,
+  OUT UINT32 *Attributes          OPTIONAL
+  );
+
+/**
+  Set current SIP setting.
+
+  @param[in]      CsrActiveConfig    csr-active-config value to set, or NULL to clear the variable.
+  @param[in]      Attributes         Attributes to apply.
+
+  @retval EFI_SUCCESS, EFI_NOT_FOUND, or other error returned by called code.
+**/
+EFI_STATUS
+OcSetSip (
+  IN  UINT32 *CsrActiveConfig,
+  IN  UINT32 Attributes
+  );
+
+/**
+  Is SIP enabled?
+
+  @param[in]      GetStatus          Return status from previous OcGetSip or gRT->GetVariable call.
+  @param[in]      CsrActiveConfig    csr-active-config value from previous OcGetSip or gRT->GetVariable call.
+                                     This value is never used unless GetStatus is EFI_SUCCESS.
+
+  @retval TRUE if SIP should be considered enabled based on the passed values.
+**/
+BOOLEAN
+OcIsSipEnabled (
+  IN  EFI_STATUS  GetStatus,
+  IN  UINT32      CsrActiveConfig
+  );
+
+/**
+  Toggle SIP.
+
+  @param[in]      CsrActiveConfig    The csr-active-config value to use to disable SIP, if it was previously enabled.
+
+  @retval TRUE on successful operation.
+**/
+EFI_STATUS
+OcToggleSip (
+  IN  UINT32 CsrActiveConfig
   );
 
 /**

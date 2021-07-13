@@ -229,7 +229,12 @@ InternelBootPickerScrollSelected (
   INT64                  EntryOffsetX;
   UINT32                 EntryWidth;
 
-  if (mBootPicker.Hdr.Obj.NumChildren == 1) {
+  ASSERT (mBootPicker.SelectedIndex < mBootPicker.Hdr.Obj.NumChildren);
+
+  //
+  // No scroll required if nothing off screen
+  //
+  if (mBootPicker.Hdr.Obj.Width <= mBootPickerContainer.Obj.Width) {
     return 0;
   }
   //
@@ -412,26 +417,30 @@ InternalBootPickerKeyEvent (
   BaseY = mBootPickerContainer.Obj.OffsetY + mBootPicker.Hdr.Obj.OffsetY;
 
   if (KeyEvent->OcKeyCode == OC_INPUT_RIGHT) {
-    InternalBootPickerChangeEntry (
-      Picker,
-      DrawContext,
-      BaseX,
-      BaseY,
-      mBootPicker.SelectedIndex + 1 < mBootPicker.Hdr.Obj.NumChildren
-        ? mBootPicker.SelectedIndex + 1
-        : 0
-      );
+    if (mBootPicker.Hdr.Obj.NumChildren > 1) {
+      InternalBootPickerChangeEntry (
+        Picker,
+        DrawContext,
+        BaseX,
+        BaseY,
+        mBootPicker.SelectedIndex + 1 < mBootPicker.Hdr.Obj.NumChildren
+          ? mBootPicker.SelectedIndex + 1
+          : 0
+        );
+    }
   } else if (KeyEvent->OcKeyCode == OC_INPUT_LEFT) {
     ASSERT (mBootPicker.Hdr.Obj.NumChildren > 0);
-    InternalBootPickerChangeEntry (
-      Picker,
-      DrawContext,
-      BaseX,
-      BaseY,
-      mBootPicker.SelectedIndex > 0
-        ? mBootPicker.SelectedIndex - 1
-        : mBootPicker.Hdr.Obj.NumChildren - 1
-      );
+    if (mBootPicker.Hdr.Obj.NumChildren > 1) {
+      InternalBootPickerChangeEntry (
+        Picker,
+        DrawContext,
+        BaseX,
+        BaseY,
+        mBootPicker.SelectedIndex > 0
+          ? mBootPicker.SelectedIndex - 1
+          : mBootPicker.Hdr.Obj.NumChildren - 1
+        );
+    }
   } else if (KeyEvent->OcKeyCode == OC_INPUT_CONTINUE) {
     if (mBootPicker.Hdr.Obj.NumChildren > 0) {
       SelectedEntry = InternalGetVolumeEntry (mBootPicker.SelectedIndex);
@@ -707,17 +716,12 @@ InternalBootPickerEntryPtrEvent (
        || Event->Type == GuiPointerPrimaryUp
        || Event->Type == GuiPointerPrimaryDoubleClick);
 
-  if (OffsetX < BOOT_ENTRY_ICON_SPACE * DrawContext->Scale
-   || OffsetY < BOOT_ENTRY_ICON_SPACE * DrawContext->Scale) {
-    return This;
-  }
-
   Entry = BASE_CR (This, GUI_VOLUME_ENTRY, Hdr.Obj);
 
   IsHit = GuiClickableIsHit (
             &Entry->EntryIcon,
-            OffsetX - BOOT_ENTRY_ICON_SPACE * DrawContext->Scale,
-            OffsetY - BOOT_ENTRY_ICON_SPACE * DrawContext->Scale
+            OffsetX,
+            OffsetY
             );
   if (!IsHit) {
     return This;
@@ -1152,7 +1156,7 @@ GLOBAL_REMOVE_IF_UNREFERENCED GUI_OBJ_CLICKABLE mBootPickerSelectorButton = {
   0
 };
 
-STATIC GUI_OBJ_CHILD *mBootPickerSelectorContainerChilds[] = {
+STATIC GUI_OBJ_CHILD *mBootPickerSelectorContainerChildren[] = {
   &mBootPickerSelectorBackground,
   &mBootPickerSelectorButton.Hdr
 };
@@ -1164,13 +1168,13 @@ GLOBAL_REMOVE_IF_UNREFERENCED GUI_OBJ_CHILD mBootPickerSelectorContainer = {
     NULL,
     GuiObjDelegatePtrEvent,
     NULL,
-    ARRAY_SIZE (mBootPickerSelectorContainerChilds),
-    mBootPickerSelectorContainerChilds
+    ARRAY_SIZE (mBootPickerSelectorContainerChildren),
+    mBootPickerSelectorContainerChildren
   },
   &mBootPickerContainer.Obj
 };
 
-STATIC GUI_OBJ_CHILD *mBootPickerContainerChilds[] = {
+STATIC GUI_OBJ_CHILD *mBootPickerContainerChildren[] = {
   &mBootPickerSelectorContainer,
   &mBootPicker.Hdr
 };
@@ -1182,8 +1186,8 @@ GLOBAL_REMOVE_IF_UNREFERENCED GUI_OBJ_CHILD mBootPickerContainer = {
     NULL,
     GuiObjDelegatePtrEvent,
     NULL,
-    ARRAY_SIZE (mBootPickerContainerChilds),
-    mBootPickerContainerChilds
+    ARRAY_SIZE (mBootPickerContainerChildren),
+    mBootPickerContainerChildren
   },
   NULL
 };
@@ -1251,7 +1255,7 @@ GLOBAL_REMOVE_IF_UNREFERENCED GUI_OBJ_CHILD mBootPickerVersionLabel = {
   NULL
 };
 
-STATIC GUI_OBJ_CHILD *mBootPickerViewChilds[] = {
+STATIC GUI_OBJ_CHILD *mBootPickerViewChildren[] = {
   &mBootPickerContainer,
   &mCommonActionButtonsContainer,
   &mBootPickerLeftScroll.Hdr,
@@ -1259,7 +1263,7 @@ STATIC GUI_OBJ_CHILD *mBootPickerViewChilds[] = {
   &mBootPickerVersionLabel
 };
 
-STATIC GUI_OBJ_CHILD *mBootPickerViewChildsMinimal[] = {
+STATIC GUI_OBJ_CHILD *mBootPickerViewChildrenMinimal[] = {
   &mBootPickerContainer,
   &mBootPickerLeftScroll.Hdr,
   &mBootPickerRightScroll.Hdr,
@@ -1269,8 +1273,8 @@ STATIC GUI_OBJ_CHILD *mBootPickerViewChildsMinimal[] = {
 GLOBAL_REMOVE_IF_UNREFERENCED GUI_VIEW_CONTEXT mBootPickerViewContext = {
   InternalCommonViewDraw,
   InternalCommonViewPtrEvent,
-  ARRAY_SIZE (mBootPickerViewChilds),
-  mBootPickerViewChilds,
+  ARRAY_SIZE (mBootPickerViewChildren),
+  mBootPickerViewChildren,
   InternalBootPickerViewKeyEvent,
   InternalGetCursorImage,
   InternalBootPickerExitLoop,
@@ -1281,8 +1285,8 @@ GLOBAL_REMOVE_IF_UNREFERENCED GUI_VIEW_CONTEXT mBootPickerViewContext = {
 GLOBAL_REMOVE_IF_UNREFERENCED GUI_VIEW_CONTEXT mBootPickerViewContextMinimal = {
   InternalCommonViewDraw,
   InternalCommonViewPtrEvent,
-  ARRAY_SIZE (mBootPickerViewChildsMinimal),
-  mBootPickerViewChildsMinimal,
+  ARRAY_SIZE (mBootPickerViewChildrenMinimal),
+  mBootPickerViewChildrenMinimal,
   InternalBootPickerViewKeyEvent,
   InternalGetCursorImage,
   InternalBootPickerExitLoop,
@@ -1327,11 +1331,14 @@ BootPickerEntriesSet (
   UINT32                      IconTypeIndex;
   VOID                        *IconFileData;
   BOOLEAN                     UseVolumeIcon;
+  BOOLEAN                     UseFlavourIcon;
   BOOLEAN                     UseDiskLabel;
   BOOLEAN                     UseGenericLabel;
   BOOLEAN                     Result;
   CHAR16                      *EntryName;
   UINTN                       EntryNameLength;
+  CHAR8                       *FlavourNameStart;
+  CHAR8                       *FlavourNameEnd;
 
   ASSERT (GuiContext != NULL);
   ASSERT (Entry != NULL);
@@ -1340,6 +1347,7 @@ BootPickerEntriesSet (
   DEBUG ((DEBUG_INFO, "OCUI: Console attributes: %d\n", Context->ConsoleAttributes));
 
   UseVolumeIcon   = (Context->PickerAttributes & OC_ATTR_USE_VOLUME_ICON) != 0;
+  UseFlavourIcon  = (Context->PickerAttributes & OC_ATTR_USE_FLAVOUR_ICON) != 0;
   UseDiskLabel    = (Context->PickerAttributes & OC_ATTR_USE_DISK_LABEL_FILE) != 0;
   UseGenericLabel = (Context->PickerAttributes & OC_ATTR_USE_GENERIC_LABEL_IMAGE) != 0;
 
@@ -1392,10 +1400,21 @@ BootPickerEntriesSet (
       case OC_BOOT_RESET_NVRAM:
         Status = CopyLabel (&VolumeEntry->Label, &GuiContext->Labels[LABEL_RESET_NVRAM]);
         break;
+      case OC_BOOT_TOGGLE_SIP:
+        ASSERT (
+          StrCmp (Entry->Name, OC_MENU_SIP_IS_DISABLED) == 0 ||
+          StrCmp (Entry->Name, OC_MENU_SIP_IS_ENABLED) == 0
+          );
+        if (StrCmp (Entry->Name, OC_MENU_SIP_IS_DISABLED) == 0) {
+          Status = CopyLabel (&VolumeEntry->Label, &GuiContext->Labels[LABEL_SIP_IS_DISABLED]);
+        } else {
+          Status = CopyLabel (&VolumeEntry->Label, &GuiContext->Labels[LABEL_SIP_IS_ENABLED]);
+        }
+        break;
       case OC_BOOT_EXTERNAL_TOOL:
-        if (StrStr (Entry->Name, OC_MENU_RESET_NVRAM_ENTRY) != NULL) {
+        if (OcAsciiStriStr (Entry->Flavour, OC_FLAVOUR_ID_RESET_NVRAM) != NULL) {
           Status = CopyLabel (&VolumeEntry->Label, &GuiContext->Labels[LABEL_RESET_NVRAM]);
-        } else if (StrStr (Entry->Name, OC_MENU_UEFI_SHELL_ENTRY) != NULL) {
+        } else if (OcAsciiStriStr (Entry->Flavour, OC_FLAVOUR_ID_UEFI_SHELL) != NULL) {
           Status = CopyLabel (&VolumeEntry->Label, &GuiContext->Labels[LABEL_SHELL]);
         } else {
           Status = CopyLabel (&VolumeEntry->Label, &GuiContext->Labels[LABEL_TOOL]);
@@ -1477,64 +1496,50 @@ BootPickerEntriesSet (
     Status = EFI_UNSUPPORTED;
   }
 
+  //
+  // Flavour system is used internally for icon priorities even when
+  // user-specified flavours from .contentFlavour are not being read
+  //
   if (EFI_ERROR (Status)) {
-    SuggestedIcon = NULL;
+    ASSERT (Entry->Flavour != NULL);
+
     IconTypeIndex = Entry->IsExternal ? ICON_TYPE_EXTERNAL : ICON_TYPE_BASE;
-    switch (Entry->Type) {
-      case OC_BOOT_APPLE_OS:
-        SuggestedIcon = &GuiContext->Icons[ICON_APPLE][IconTypeIndex];
-        break;
-      case OC_BOOT_APPLE_FW_UPDATE:
-      case OC_BOOT_APPLE_RECOVERY:
-        SuggestedIcon = &GuiContext->Icons[ICON_APPLE_RECOVERY][IconTypeIndex];
-        if (SuggestedIcon->Buffer == NULL) {
-          SuggestedIcon = &GuiContext->Icons[ICON_APPLE][IconTypeIndex];
-        }
-        break;
-      case OC_BOOT_APPLE_TIME_MACHINE:
-        SuggestedIcon = &GuiContext->Icons[ICON_APPLE_TIME_MACHINE][IconTypeIndex];
-        if (SuggestedIcon->Buffer == NULL) {
-          SuggestedIcon = &GuiContext->Icons[ICON_APPLE][IconTypeIndex];
-        }
-        break;
-      case OC_BOOT_WINDOWS:
-        SuggestedIcon = &GuiContext->Icons[ICON_WINDOWS][IconTypeIndex];
-        break;
-      case OC_BOOT_EXTERNAL_OS:
-        SuggestedIcon = &GuiContext->Icons[ICON_OTHER][IconTypeIndex];
-        break;
-      case OC_BOOT_RESET_NVRAM:
-        SuggestedIcon = &GuiContext->Icons[ICON_RESET_NVRAM][IconTypeIndex];
-        if (SuggestedIcon->Buffer == NULL) {
+
+    FlavourNameEnd = Entry->Flavour - 1;
+    do
+    {
+      for (FlavourNameStart = ++FlavourNameEnd; *FlavourNameEnd != '\0' && *FlavourNameEnd != ':'; ++FlavourNameEnd);
+
+      Status = InternalGetFlavourIcon (
+        GuiContext,
+        Context->StorageContext,
+        FlavourNameStart,
+        FlavourNameEnd - FlavourNameStart,
+        IconTypeIndex,
+        UseFlavourIcon,
+        &VolumeEntry->EntryIcon,
+        &VolumeEntry->CustomIcon
+        );
+    } while (EFI_ERROR (Status) && *FlavourNameEnd != '\0');
+
+    if (EFI_ERROR (Status))
+    {
+      SuggestedIcon = NULL;
+
+      if (Entry->Type == OC_BOOT_EXTERNAL_OS) {
+          SuggestedIcon = &GuiContext->Icons[ICON_OTHER][IconTypeIndex];
+      } else if (Entry->Type == OC_BOOT_EXTERNAL_TOOL || (Entry->Type & OC_BOOT_SYSTEM) != 0) {
           SuggestedIcon = &GuiContext->Icons[ICON_TOOL][IconTypeIndex];
-        }
-        break;
-      case OC_BOOT_EXTERNAL_TOOL:
-        if (StrStr (Entry->Name, OC_MENU_RESET_NVRAM_ENTRY) != NULL) {
-          SuggestedIcon = &GuiContext->Icons[ICON_RESET_NVRAM][IconTypeIndex];
-        } else if (StrStr (Entry->Name, OC_MENU_UEFI_SHELL_ENTRY) != NULL) {
-          SuggestedIcon = &GuiContext->Icons[ICON_SHELL][IconTypeIndex];
-        }
+      }
 
-        if (SuggestedIcon == NULL || SuggestedIcon->Buffer == NULL) {
-          SuggestedIcon = &GuiContext->Icons[ICON_TOOL][IconTypeIndex];
-        }
-        break;
-      case OC_BOOT_UNKNOWN:
-        SuggestedIcon = &GuiContext->Icons[ICON_GENERIC_HDD][IconTypeIndex];
-        break;
-      default:
-        DEBUG ((DEBUG_WARN, "OCUI: Entry kind %d unsupported for icon\n", Entry->Type));
-        return EFI_UNSUPPORTED;
+      if (SuggestedIcon == NULL || SuggestedIcon->Buffer == NULL) {
+          SuggestedIcon = &GuiContext->Icons[ICON_GENERIC_HDD][IconTypeIndex];
+      }
+
+      CopyMem (&VolumeEntry->EntryIcon, SuggestedIcon, sizeof (VolumeEntry->EntryIcon));
+    } else {
+      DEBUG ((DEBUG_INFO, "OCUI: Using flavour icon, custom: %u\n", VolumeEntry->CustomIcon));
     }
-
-    ASSERT (SuggestedIcon != NULL);
-
-    if (SuggestedIcon->Buffer == NULL) {
-      SuggestedIcon = &GuiContext->Icons[ICON_GENERIC_HDD][IconTypeIndex];
-    }
-
-    CopyMem (&VolumeEntry->EntryIcon, SuggestedIcon, sizeof (VolumeEntry->EntryIcon));
   }
 
   VolumeEntry->Hdr.Parent       = &mBootPicker.Hdr.Obj;
@@ -1997,41 +2002,21 @@ BootPickerViewLateInitialize (
   IN     UINT8                    DefaultIndex
   )
 {
-  UINT32                 Index;
-  INT64                  ScrollOffset;
   CONST GUI_VOLUME_ENTRY *BootEntry;
 
   ASSERT (DefaultIndex < mBootPicker.Hdr.Obj.NumChildren);
 
-  ScrollOffset = InternelBootPickerScrollSelected ();
-  //
-  // If ScrollOffset is non-0, the selected entry will be aligned left- or
-  // right-most. The view holds a discrete amount of entries, so cut-offs are
-  // impossible.
-  //
-  if (ScrollOffset == 0) {
-    //
-    // Find the first entry that is fully visible.
-    //
-    for (Index = 0; Index < mBootPicker.Hdr.Obj.NumChildren; ++Index) {
-      //
-      // Move the first partially visible boot entry to the very left to prevent
-      // cut-off entries. This only applies when entries overflow.
-      //
-      BootEntry = InternalGetVolumeEntry (Index);
-      if (mBootPicker.Hdr.Obj.OffsetX + BootEntry->Hdr.Obj.OffsetX >= 0) {
-        //
-        // Move the cut-off entry on-screen.
-        //
-        ScrollOffset = -ScrollOffset;
-        break;
-      }
+  mBootPicker.SelectedIndex = DefaultIndex;
 
-      ScrollOffset = mBootPicker.Hdr.Obj.OffsetX + BootEntry->Hdr.Obj.OffsetX;
-    }
+  //
+  // If more entries than screen width, firstly align left-most entry
+  // then scroll from there as needed to bring default entry on screen
+  //
+  if (mBootPicker.Hdr.Obj.OffsetX < 0) {
+    mBootPicker.Hdr.Obj.OffsetX = 0;
+    mBootPicker.Hdr.Obj.OffsetX = InternelBootPickerScrollSelected ();
   }
 
-  mBootPicker.Hdr.Obj.OffsetX += ScrollOffset;
   //
   // If the scroll buttons are hidden, the intro animation will update them
   // implicitly.

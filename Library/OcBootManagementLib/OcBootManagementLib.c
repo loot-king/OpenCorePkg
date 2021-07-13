@@ -270,6 +270,15 @@ OcRunBootPicker (
       Status = RunShowMenu (BootContext, &Chosen);
 
       if (EFI_ERROR (Status) && Status != EFI_ABORTED) {
+        if (BootContext->PickerContext->ShowMenu != OcShowSimpleBootMenu) {
+          DEBUG ((DEBUG_WARN, "OCB: External interface ShowMenu failure, fallback to builtin - %r\n", Status));
+          BootContext->PickerContext->ShowMenu = OcShowSimpleBootMenu;
+          BootContext->PickerContext->RequestPrivilege = OcShowSimplePasswordRequest;
+          Status = RunShowMenu (BootContext, &Chosen);
+        }
+      }
+
+      if (EFI_ERROR (Status) && Status != EFI_ABORTED) {
         DEBUG ((DEBUG_ERROR, "OCB: ShowMenu failed - %r\n", Status));
         OcFreeBootContext (BootContext);
         return Status;
@@ -320,14 +329,11 @@ OcRunBootPicker (
         }
 
         //
-        // Do screen clearing for builtin menu here, so that it is possible to see the action.
-        // TODO: Probably remove that completely.
+        // Clear screen of previous console contents - e.g. from builtin picker,
+        // log messages or previous console tool - before loading the entry.
         //
+        gST->ConOut->ClearScreen (gST->ConOut);
         if (Context->ShowMenu == OcShowSimpleBootMenu) {
-          //
-          // Clear screen from picker contents before loading the entry.
-          //
-          gST->ConOut->ClearScreen (gST->ConOut);
           gST->ConOut->TestString (gST->ConOut, OC_CONSOLE_MARK_UNCONTROLLED);
         }
 

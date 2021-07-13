@@ -43,14 +43,15 @@ Kexts
 
 | Video and audio | MinKernel (Min macOS) | MaxKernel (Max macOS) |
 |-----------------|-----------------------|-----------------------|
-| [AppleALC.kext](https://github.com/acidanthera/AppleALC) | 12.0.0 (10.8) | — |
+| [AppleALC.kext](https://github.com/acidanthera/AppleALC) | 10.0.0 (10.6) | — |
+| [AppleALCU.kext](https://github.com/acidanthera/AppleALC) | 10.0.0 (10.6) | — |
 | [EMUUSBAudio.kext](https://github.com/Wouter1/EMU-driver) | — | — |
 | [kXAudioDriver.kext](https://github.com/kxproject/kx-audio-driver) | — | — |
 | [Nvidia CUDA drivers](https://www.nvidia.com/object/mac-driver-archive.html) | 10.0.0 (10.6) | 17.9.9 (10.13) |
 | [Nvidia Web-drivers](https://gfe.nvidia.com/mac-update) | 12.0.0 (10.8) | 17.9.9 (10.13) |
 | [SNBGraphicsMojaveInstaller](https://github.com/Andrej-Antipov/SNBGraphicsMojaveInstaller) | 18.0.0 (10.14) From 10.13 | — |
 | [VoodooHDA.kext](https://sourceforge.net/projects/voodoohda/) | — | — |
-| [WhateverGreen.kext](https://github.com/acidanthera/WhateverGreen) | 12.0.0 (10.8) | — |
+| [WhateverGreen.kext](https://github.com/acidanthera/WhateverGreen) | 10.0.0 (10.6) | — |
 | [Polaris22Fixup.kext](https://github.com/osy86/Polaris22Fixup) | 18.0.0 (10.14) | — |
 
 | CPU and SMC | MinKernel (Min macOS) | MaxKernel (Max macOS) |
@@ -70,7 +71,7 @@ Kexts
 | [VirtualSMC.kext](https://github.com/acidanthera/VirtualSMC) | 10.0.0 (10.6) | — |
 | [SMCLightSensor.kext](https://github.com/acidanthera/VirtualSMC) | 10.0.0 (10.6) Not tested | — |
 | [SMCSuperIO.kext](https://github.com/acidanthera/VirtualSMC) | 10.0.0 (10.6) Not tested | — |
-| [SMCBatteryManager.kext](https://github.com/acidanthera/VirtualSMC) | 10.0.0 (10.6) Not tested | — |
+| [SMCBatteryManager.kext](https://github.com/acidanthera/VirtualSMC) | 10.0.0 (10.6) | — |
 | [SMCProcessor.kext](https://github.com/acidanthera/VirtualSMC) | 11.0.0 (10.7) Not tested | — |
 | [SMCDellSensor.kext](https://github.com/acidanthera/VirtualSMC) | 11.0.0 (10.7) Not tested | — |
 
@@ -93,9 +94,10 @@ Kexts
 | [Lilu.kext](https://github.com/acidanthera/Lilu) | 10.0.0 (10.6) | — |
 | [RestrictEvents.kext](https://github.com/acidanthera/RestrictEvents) | 12.0.0 (10.8) | — |
 | [RTCMemoryFixup.kext](https://github.com/lvs1974/RTCMemoryFixup) | 12.0.0 (10.8) | — |
-| [NightShiftEnabler.kext](https://github.com/cdf/NightShiftEnabler) | 16.0.0 (10.12) | — |
 | [WebCamera.kext](https://www.applelife.ru/threads/asus-x550vc-i-asus-x550cc.41752/page-130#post-593586) | — | — |
 | [TOSMotionSensor.kext](https://github.com/jslegendre/TOSMotionSensor) | — | — |
+| [FeatureUnlock.kext](https://github.com/acidanthera/FeatureUnlock) | — | — |
+| [MacHyperVSupport.kext](https://github.com/acidanthera/MacHyperVSupport) | 10.0.0 (10.6) | — |
 
 More complete list with legacy kexts is hosted [here](https://docs.google.com/spreadsheets/d/15S-ocrkm_VTUJpKxNII-YUyQFd5VYdjbe0DHlZVCQyM). Full Lilu plugin list with legacy kexts is hosted [here](https://github.com/acidanthera/Lilu/blob/master/KnownPlugins.md). For developers only.   
 Acidanthera members are not affiliated with the authors of any kernel extensions but ones hosted at https://github.com/acidanthera. This list is provided for information purposes without warranty of any kind.  

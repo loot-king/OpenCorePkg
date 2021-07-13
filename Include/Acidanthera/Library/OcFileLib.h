@@ -29,6 +29,11 @@
 **/
 #define OC_MAX_VOLUME_LABEL_SIZE 64
 
+/**
+  Maximum safe content flavour size.
+**/
+#define OC_MAX_CONTENT_FLAVOUR_SIZE 64
+
 typedef struct {
   UINT32  PreviousTime;
   UINTN   PreviousIndex;
@@ -324,6 +329,18 @@ IsWritableFileSystem (
 EFI_STATUS
 FindWritableFileSystem (
   IN OUT EFI_FILE_PROTOCOL  **WritableFs
+  );
+
+/**
+  Find writable filesystem from Bootstrap.
+
+  @param[out]  FileSystem   Pointer to first found writeable file system.
+
+  @retval EFI_SUCCESS on success.
+**/
+EFI_STATUS
+FindWritableOcFileSystem (
+  OUT EFI_FILE_PROTOCOL  **FileSystem
   );
 
 /**

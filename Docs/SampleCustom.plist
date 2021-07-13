@@ -257,6 +257,8 @@
 			<false/>
 			<key>ResetLogoStatus</key>
 			<true/>
+			<key>SyncTableIds</key>
+			<false/>
 		</dict>
 	</dict>
 	<key>Booter</key>
@@ -416,7 +418,7 @@
 				<key>MaxKernel</key>
 				<string></string>
 				<key>MinKernel</key>
-				<string>12.0.0</string>
+				<string>10.0.0</string>
 				<key>PlistPath</key>
 				<string>Contents/Info.plist</string>
 			</dict>
@@ -434,7 +436,7 @@
 				<key>MaxKernel</key>
 				<string></string>
 				<key>MinKernel</key>
-				<string>12.0.0</string>
+				<string>10.0.0</string>
 				<key>PlistPath</key>
 				<string>Contents/Info.plist</string>
 			</dict>
@@ -452,7 +454,7 @@
 				<key>MaxKernel</key>
 				<string></string>
 				<key>MinKernel</key>
-				<string></string>
+				<string>13.0.0</string>
 				<key>PlistPath</key>
 				<string>Contents/Info.plist</string>
 			</dict>
@@ -579,6 +581,60 @@
 				<string></string>
 				<key>MinKernel</key>
 				<string>15.0.0</string>
+				<key>PlistPath</key>
+				<string>Contents/Info.plist</string>
+			</dict>
+			<dict>
+				<key>Arch</key>
+				<string>x86_64</string>
+				<key>BundlePath</key>
+				<string>AirportBrcmFixup.kext</string>
+				<key>Comment</key>
+				<string></string>
+				<key>Enabled</key>
+				<false/>
+				<key>ExecutablePath</key>
+				<string>Contents/MacOS/AirportBrcmFixup</string>
+				<key>MaxKernel</key>
+				<string></string>
+				<key>MinKernel</key>
+				<string>12.0.0</string>
+				<key>PlistPath</key>
+				<string>Contents/Info.plist</string>
+			</dict>
+			<dict>
+				<key>Arch</key>
+				<string>x86_64</string>
+				<key>BundlePath</key>
+				<string>AirportBrcmFixup.kext/Contents/PlugIns/AirPortBrcm4360_Injector.kext</string>
+				<key>Comment</key>
+				<string></string>
+				<key>Enabled</key>
+				<false/>
+				<key>ExecutablePath</key>
+				<string></string>
+				<key>MaxKernel</key>
+				<string>19.9.9</string>
+				<key>MinKernel</key>
+				<string>12.0.0</string>
+				<key>PlistPath</key>
+				<string>Contents/Info.plist</string>
+			</dict>
+			<dict>
+				<key>Arch</key>
+				<string>x86_64</string>
+				<key>BundlePath</key>
+				<string>AirportBrcmFixup.kext/Contents/PlugIns/AirPortBrcmNIC_Injector.kext</string>
+				<key>Comment</key>
+				<string></string>
+				<key>Enabled</key>
+				<false/>
+				<key>ExecutablePath</key>
+				<string></string>
+				<key>MaxKernel</key>
+				<string></string>
+				<key>MinKernel</key>
+				<string>17.0.0</string>
 				<key>PlistPath</key>
 				<string>Contents/Info.plist</string>
 			</dict>
@@ -883,6 +939,8 @@
 			<false/>
 			<key>PowerTimeoutKernelPanic</key>
 			<false/>
+			<key>ProvideCurrentCpuInfo</key>
+			<false/>
 			<key>SetApfsTrimTimeout</key>
 			<integer>-1</integer>
 			<key>ThirdPartyDrives</key>
@@ -892,6 +950,8 @@
 		</dict>
 		<key>Scheme</key>
 		<dict>
+			<key>CustomKernel</key>
+			<false/>
 			<key>FuzzyMatch</key>
 			<true/>
 			<key>KernelArch</key>
@@ -963,6 +1023,8 @@
 				<string>Not signed for security reasons</string>
 				<key>Enabled</key>
 				<false/>
+				<key>Flavour</key>
+				<string>Auto</string>
 				<key>Name</key>
 				<string>CustomOS</string>
 				<key>Path</key>
@@ -976,6 +1038,8 @@
 			<key>AllowNvramReset</key>
 			<false/>
 			<key>AllowSetDefault</key>
+			<false/>
+			<key>AllowToggleSip</key>
 			<false/>
 			<key>ApECID</key>
 			<integer>0</integer>
@@ -1013,6 +1077,8 @@
 				<string>Not signed for security reasons</string>
 				<key>Enabled</key>
 				<false/>
+				<key>Flavour</key>
+				<string>OpenShell:UEFIShell:Shell</string>
 				<key>Name</key>
 				<string>UEFI Shell</string>
 				<key>Path</key>
@@ -1026,17 +1092,19 @@
 				<key>Arguments</key>
 				<string></string>
 				<key>Auxiliary</key>
-				<false/>
+				<true/>
 				<key>Comment</key>
 				<string>Memory testing utility</string>
 				<key>Enabled</key>
 				<false/>
+				<key>Flavour</key>
+				<string>MemTest</string>
 				<key>Name</key>
-				<string>memcheck</string>
+				<string>memtest86</string>
 				<key>Path</key>
-				<string>memcheck/memcheck.efi</string>
+				<string>memtest86/BOOTX64.efi</string>
 				<key>RealPath</key>
-				<false/>
+				<true/>
 				<key>TextMode</key>
 				<false/>
 			</dict>
@@ -1049,6 +1117,8 @@
 				<string>Perform shutdown</string>
 				<key>Enabled</key>
 				<false/>
+				<key>Flavour</key>
+				<string>Auto</string>
 				<key>Name</key>
 				<string>Shutdown</string>
 				<key>Path</key>
@@ -1180,7 +1250,7 @@
 		</dict>
 		<key>Generic</key>
 		<dict>
-			<key>AdviseWindows</key>
+			<key>AdviseFeatures</key>
 			<false/>
 			<key>MaxBIOSVersion</key>
 			<false/>
@@ -1217,13 +1287,13 @@
 					<key>Manufacturer</key>
 					<string>Acidanthera</string>
 					<key>PartNumber</key>
-					<string>M00001-4GB</string>
+					<string>M00001-8GB</string>
 					<key>SerialNumber</key>
 					<string>AAA000000001</string>
 					<key>Size</key>
-					<integer>4096</integer>
+					<integer>8192</integer>
 					<key>Speed</key>
-					<integer>2666</integer>
+					<integer>2400</integer>
 				</dict>
 				<dict>
 					<key>AssetTag</key>
@@ -1233,7 +1303,7 @@
 					<key>DeviceLocator</key>
 					<string>ChannelA-DIMM1</string>
 					<key>Manufacturer</key>
-					<string></string>
+					<string>NO DIMM</string>
 					<key>PartNumber</key>
 					<string></string>
 					<key>SerialNumber</key>
@@ -1253,13 +1323,13 @@
 					<key>Manufacturer</key>
 					<string>Acidanthera</string>
 					<key>PartNumber</key>
-					<string>M00001-4GB</string>
+					<string>M00001-8GB</string>
 					<key>SerialNumber</key>
 					<string>AAA000000002</string>
 					<key>Size</key>
-					<integer>4096</integer>
+					<integer>8192</integer>
 					<key>Speed</key>
-					<integer>2666</integer>
+					<integer>2400</integer>
 				</dict>
 				<dict>
 					<key>AssetTag</key>
@@ -1269,7 +1339,151 @@
 					<key>DeviceLocator</key>
 					<string>ChannelB-DIMM1</string>
 					<key>Manufacturer</key>
+					<string>NO DIMM</string>
+					<key>PartNumber</key>
 					<string></string>
+					<key>SerialNumber</key>
+					<string></string>
+					<key>Size</key>
+					<integer>0</integer>
+					<key>Speed</key>
+					<integer>0</integer>
+				</dict>
+				<dict>
+					<key>AssetTag</key>
+					<string></string>
+					<key>BankLocator</key>
+					<string>BANK 4</string>
+					<key>DeviceLocator</key>
+					<string>ChannelC-DIMM0</string>
+					<key>Manufacturer</key>
+					<string>NO DIMM</string>
+					<key>PartNumber</key>
+					<string></string>
+					<key>SerialNumber</key>
+					<string></string>
+					<key>Size</key>
+					<integer>0</integer>
+					<key>Speed</key>
+					<integer>0</integer>
+				</dict>
+				<dict>
+					<key>AssetTag</key>
+					<string></string>
+					<key>BankLocator</key>
+					<string>BANK 5</string>
+					<key>DeviceLocator</key>
+					<string>ChannelC-DIMM1</string>
+					<key>Manufacturer</key>
+					<string>NO DIMM</string>
+					<key>PartNumber</key>
+					<string></string>
+					<key>SerialNumber</key>
+					<string></string>
+					<key>Size</key>
+					<integer>0</integer>
+					<key>Speed</key>
+					<integer>0</integer>
+				</dict>
+				<dict>
+					<key>AssetTag</key>
+					<string>123456789</string>
+					<key>BankLocator</key>
+					<string>BANK 0</string>
+					<key>DeviceLocator</key>
+					<string>ChannelA-DIMM0</string>
+					<key>Manufacturer</key>
+					<string>Acidanthera</string>
+					<key>PartNumber</key>
+					<string>M00001-8GB</string>
+					<key>SerialNumber</key>
+					<string>AAA000000001</string>
+					<key>Size</key>
+					<integer>8192</integer>
+					<key>Speed</key>
+					<integer>2400</integer>
+				</dict>
+				<dict>
+					<key>AssetTag</key>
+					<string></string>
+					<key>BankLocator</key>
+					<string>BANK 1</string>
+					<key>DeviceLocator</key>
+					<string>ChannelA-DIMM1</string>
+					<key>Manufacturer</key>
+					<string>NO DIMM</string>
+					<key>PartNumber</key>
+					<string></string>
+					<key>SerialNumber</key>
+					<string></string>
+					<key>Size</key>
+					<integer>0</integer>
+					<key>Speed</key>
+					<integer>0</integer>
+				</dict>
+				<dict>
+					<key>AssetTag</key>
+					<string>123456789</string>
+					<key>BankLocator</key>
+					<string>BANK 2</string>
+					<key>DeviceLocator</key>
+					<string>ChannelB-DIMM0</string>
+					<key>Manufacturer</key>
+					<string>Acidanthera</string>
+					<key>PartNumber</key>
+					<string>M00001-8GB</string>
+					<key>SerialNumber</key>
+					<string>AAA000000002</string>
+					<key>Size</key>
+					<integer>8192</integer>
+					<key>Speed</key>
+					<integer>2400</integer>
+				</dict>
+				<dict>
+					<key>AssetTag</key>
+					<string></string>
+					<key>BankLocator</key>
+					<string>BANK 3</string>
+					<key>DeviceLocator</key>
+					<string>ChannelB-DIMM1</string>
+					<key>Manufacturer</key>
+					<string>NO DIMM</string>
+					<key>PartNumber</key>
+					<string></string>
+					<key>SerialNumber</key>
+					<string></string>
+					<key>Size</key>
+					<integer>0</integer>
+					<key>Speed</key>
+					<integer>0</integer>
+				</dict>
+				<dict>
+					<key>AssetTag</key>
+					<string></string>
+					<key>BankLocator</key>
+					<string>BANK 4</string>
+					<key>DeviceLocator</key>
+					<string>ChannelC-DIMM0</string>
+					<key>Manufacturer</key>
+					<string>NO DIMM</string>
+					<key>PartNumber</key>
+					<string></string>
+					<key>SerialNumber</key>
+					<string></string>
+					<key>Size</key>
+					<integer>0</integer>
+					<key>Speed</key>
+					<integer>0</integer>
+				</dict>
+				<dict>
+					<key>AssetTag</key>
+					<string></string>
+					<key>BankLocator</key>
+					<string>BANK 5</string>
+					<key>DeviceLocator</key>
+					<string>ChannelC-DIMM1</string>
+					<key>Manufacturer</key>
+					<string>NO DIMM</string>
 					<key>PartNumber</key>
 					<string></string>
 					<key>SerialNumber</key>
@@ -1313,11 +1527,11 @@
 		<key>SMBIOS</key>
 		<dict>
 			<key>BIOSReleaseDate</key>
-			<string>01/05/2021</string>
+			<string>04/26/2021</string>
 			<key>BIOSVendor</key>
 			<string>Acidanthera</string>
 			<key>BIOSVersion</key>
-			<string>1554.80.3.0.0</string>
+			<string>1554.120.15.0.0</string>
 			<key>BoardAssetTag</key>
 			<string></string>
 			<key>BoardLocationInChassis</key>
@@ -1405,6 +1619,8 @@
 			<integer>50</integer>
 			<key>KeySubsequentDelay</key>
 			<integer>5</integer>
+			<key>GraphicsInputMirroring</key>
+			<true/>
 			<key>PointerSpeedDiv</key>
 			<integer>1</integer>
 			<key>PointerSpeedMul</key>
@@ -1480,7 +1696,7 @@
 			<key>ForceResolution</key>
 			<false/>
 			<key>GopPassThrough</key>
-			<false/>
+			<string>Disabled</string>
 			<key>IgnoreTextInGraphics</key>
 			<false/>
 			<key>ProvideConsoleGop</key>
@@ -1505,6 +1721,8 @@
 			<key>AppleBootPolicy</key>
 			<false/>
 			<key>AppleDebugLog</key>
+			<false/>
+			<key>AppleEg2Info</key>
 			<false/>
 			<key>AppleFramebufferInfo</key>
 			<false/>

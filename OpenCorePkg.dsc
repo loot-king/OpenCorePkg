@@ -65,6 +65,7 @@
   OcAppleSecureBootLib|OpenCorePkg/Library/OcAppleSecureBootLib/OcAppleSecureBootLib.inf
   OcAppleUserInterfaceThemeLib|OpenCorePkg/Library/OcAppleUserInterfaceThemeLib/OcAppleUserInterfaceThemeLib.inf
   OcAudioLib|OpenCorePkg/Library/OcAudioLib/OcAudioLib.inf
+  OcBlitLib|OpenCorePkg/Library/OcBlitLib/OcBlitLib.inf
   OcBootManagementLib|OpenCorePkg/Library/OcBootManagementLib/OcBootManagementLib.inf
   OcBootServicesTableLib|OpenCorePkg/Library/OcBootServicesTableLib/OcBootServicesTableLib.inf
   OcCompressionLib|OpenCorePkg/Library/OcCompressionLib/OcCompressionLib.inf
@@ -167,6 +168,8 @@
   }
   OpenCorePkg/Application/ChipTune/ChipTune.inf
   OpenCorePkg/Application/CleanNvram/CleanNvram.inf
+  OpenCorePkg/Application/CsrUtil/CsrUtil.inf
+  OpenCorePkg/Application/GopPerf/GopPerf.inf
   OpenCorePkg/Application/GopStop/GopStop.inf
   OpenCorePkg/Application/KeyTester/KeyTester.inf
   OpenCorePkg/Application/MmapDump/MmapDump.inf
@@ -181,6 +184,7 @@
   OpenCorePkg/Application/PavpProvision/PavpProvision.inf
   OpenCorePkg/Application/ResetSystem/ResetSystem.inf
   OpenCorePkg/Application/RtcRw/RtcRw.inf
+  OpenCorePkg/Application/TpmInfo/TpmInfo.inf
   OpenCorePkg/Application/VerifyMemOpt/VerifyMemOpt.inf {
     <LibraryClasses>
       BaseMemoryLib|MdePkg/Library/BaseMemoryLibOptDxe/BaseMemoryLibOptDxe.inf
@@ -202,6 +206,7 @@
   OpenCorePkg/Library/OcAppleSecureBootLib/OcAppleSecureBootLib.inf
   OpenCorePkg/Library/OcAppleUserInterfaceThemeLib/OcAppleUserInterfaceThemeLib.inf
   OpenCorePkg/Library/OcAudioLib/OcAudioLib.inf
+  OpenCorePkg/Library/OcBlitLib/OcBlitLib.inf
   OpenCorePkg/Library/OcBootManagementLib/OcBootManagementLib.inf
   OpenCorePkg/Library/OcBootServicesTableLib/OcBootServicesTableLib.inf
   OpenCorePkg/Library/OcCompilerIntrinsicsLib/OcCompilerIntrinsicsLib.inf
@@ -331,4 +336,4 @@
   GCC:*_*_*_DLINK_FLAGS = -z common-page-size=0x1000
   XCODE:*_*_*_DLINK_FLAGS = -seg1addr 0x1000 -segalign 0x1000
   XCODE:*_*_*_MTOC_FLAGS = -align 0x1000
-  CLANGPDB:*_*_*_DLINK_FLAGS = /ALIGN:4096
+  CLANGPDB:*_*_*_DLINK_FLAGS = /ALIGN:4096 /FILEALIGN:512

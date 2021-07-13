@@ -59,7 +59,7 @@ STATIC CONST OC_CUSTOM_BOOT_DEVICE_PATH_DECL mOcCustomBootDevPathTemplate = {
 };
 
 CONST OC_CUSTOM_BOOT_DEVICE_PATH *
-InternetGetOcCustomDevPath (
+InternalGetOcCustomDevPath (
   IN CONST EFI_DEVICE_PATH_PROTOCOL  *DevicePath
   )
 {
@@ -295,7 +295,7 @@ InternalMatchBootEntryByDevicePath (
 
   RootDevicePathSize = ((UINT8 *)UefiRemainingDevicePath - (UINT8 *)UefiDevicePath);
 
-  if (BootEntry->DevicePath == NULL || BootEntry->Type == OC_BOOT_SYSTEM) {
+  if (BootEntry->DevicePath == NULL || (BootEntry->Type & OC_BOOT_SYSTEM) != 0) {
     return FALSE;
   }
 
@@ -833,7 +833,7 @@ OcSetDefaultBootEntry (
         FALSE
         );
     } else {
-      CustomDevPath = InternetGetOcCustomDevPath (BootOptionDevicePath);
+      CustomDevPath = InternalGetOcCustomDevPath (BootOptionDevicePath);
       if (CustomDevPath != NULL) {
         MatchedEntry = InternalMatchCustomBootEntryByDevicePath (
           Entry,
@@ -1411,7 +1411,7 @@ InternalLoadBootEntry (
     ASSERT (Context->CustomRead != NULL);
 
     Status = Context->CustomRead (
-      Context->CustomEntryContext,
+      Context->StorageContext,
       BootEntry,
       &EntryData,
       &EntryDataSize,

@@ -260,6 +260,14 @@ CheckUEFIDrivers (
   for (Index = 0; Index < UserUefi->Drivers.Count; ++Index) {
     Driver = OC_BLOB_GET (UserUefi->Drivers.Values[Index]);
 
+    //
+    // Check the length of path relative to OC directory.
+    //
+    if (StrLen (OPEN_CORE_UEFI_DRIVER_PATH) + AsciiStrSize (Driver) > OC_STORAGE_SAFE_PATH_MAX) {
+      DEBUG ((DEBUG_WARN, "UEFI->Drivers[%u] is too long (should not exceed %u)!\n", Index, OC_STORAGE_SAFE_PATH_MAX));
+      ++ErrorCount;
+    }
+    
     if (Driver[0] == '#') {
       continue;
     }
@@ -397,6 +405,7 @@ CheckUEFIOutput (
   UINT32               ErrorCount;
   OC_UEFI_CONFIG       *UserUefi;
   CONST CHAR8          *TextRenderer;
+  CONST CHAR8          *GopPassThrough;
   BOOLEAN              IsTextRendererSystem;
   BOOLEAN              IsClearScreenOnModeSwitchEnabled;
   BOOLEAN              IsIgnoreTextInGraphicsEnabled;
@@ -455,6 +464,14 @@ CheckUEFIOutput (
       DEBUG ((DEBUG_WARN, "UEFI->Output->SanitiseClearScreen is enabled on non-System TextRenderer (currently %a)!\n", TextRenderer));
       ++ErrorCount;
     }
+  }
+
+  GopPassThrough = OC_BLOB_GET (&UserUefi->Output.GopPassThrough);
+  if (AsciiStrCmp (GopPassThrough, "Enabled") != 0
+    && AsciiStrCmp (GopPassThrough, "Disabled") != 0
+    && AsciiStrCmp (GopPassThrough, "Apple") != 0) {
+    DEBUG ((DEBUG_WARN, "UEFI->Output->GopPassThrough is illegal (Can only be Enabled, Disabled, Apple)!\n"));
+    ++ErrorCount;
   }
 
   //

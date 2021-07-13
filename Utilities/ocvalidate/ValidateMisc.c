@@ -249,6 +249,15 @@ CheckMiscBoot (
     DEBUG ((DEBUG_WARN, "Misc->Boot->PickerVariant cannot be empty!\n"));
     ++ErrorCount;
   }
+  //
+  // Check the length of path relative to OC directory.
+  //
+  // There is one missing '\\' after the concatenation of PickerVariant and ExtAppleRecv10_15.icns (which has the longest length). Append one.
+  //
+  if (StrLen (OPEN_CORE_IMAGE_PATH) + AsciiStrLen (PickerVariant) + 1 + AsciiStrSize ("ExtAppleRecv10_15.icns") > OC_STORAGE_SAFE_PATH_MAX) {
+    DEBUG ((DEBUG_WARN, "Misc->Boot->PickerVariant is too long (should not exceed %u)!\n", OC_STORAGE_SAFE_PATH_MAX));
+    ++ErrorCount;
+  }
 
   IsPickerAudioAssistEnabled = UserMisc->Boot.PickerAudioAssist;
   IsAudioSupportEnabled      = UserUefi->Audio.AudioSupport;
@@ -317,6 +326,63 @@ CheckMiscDebug (
 
 STATIC
 UINT32
+ValidateFlavour (
+  IN CHAR8        *EntryType,
+  IN UINT32       Index,
+  IN CONST CHAR8  *Flavour
+  )
+{
+  UINT32            ErrorCount;
+  CHAR8             FlavourCopy[OC_MAX_CONTENT_FLAVOUR_SIZE];
+  UINTN             Length;
+  CONST CHAR8       *Start;
+  CONST CHAR8       *End;
+
+  ErrorCount = 0;
+
+  if (Flavour == NULL || *Flavour == '\0') {
+    DEBUG ((DEBUG_WARN, "Misc->%a[%u]->Flavour cannot be empty (use \"Auto\")!\n", EntryType, Index));
+    ++ErrorCount;
+  } else if (AsciiStrSize (Flavour) > OC_MAX_CONTENT_FLAVOUR_SIZE) {
+    DEBUG ((DEBUG_WARN, "Misc->%a[%u]->Flavour cannot be longer than %d bytes!\n", EntryType, Index, OC_MAX_CONTENT_FLAVOUR_SIZE));
+    ++ErrorCount;
+  } else {
+    //
+    // Illegal chars
+    //
+    Length = AsciiStrLen (Flavour);
+    AsciiStrnCpyS (FlavourCopy, OC_MAX_CONTENT_FLAVOUR_SIZE, Flavour, Length);
+    AsciiFilterString (FlavourCopy, TRUE);
+    if (OcAsciiStrniCmp (FlavourCopy, Flavour, Length) != 0) {
+      DEBUG ((DEBUG_WARN, "Flavour names within Misc->%a[%u]->Flavour cannot contain CR, LF, TAB or any other non-ASCII characters!\n", EntryType, Index));
+      ++ErrorCount;
+    }
+
+    //
+    // Per-name tests
+    //
+    End = Flavour - 1;
+    do {
+      for (Start = ++End; *End != '\0' && *End != ':'; ++End);
+
+      if (Start == End) {
+        DEBUG ((DEBUG_WARN, "Flavour names within Misc->%a[%u]->Flavour cannot be empty!\n", EntryType, Index));
+        ++ErrorCount;
+      } else {
+        AsciiStrnCpyS (FlavourCopy, OC_MAX_CONTENT_FLAVOUR_SIZE, Start, End - Start);
+        if (OcAsciiStartsWith(FlavourCopy, "Ext", TRUE)) {
+          DEBUG ((DEBUG_WARN, "Flavour names within Misc->%a[%u]->Flavour cannot begin with \"Ext\"!\n", EntryType, Index));
+          ++ErrorCount;
+        }
+      }
+    } while (*End != '\0');
+  }
+
+  return ErrorCount;
+}
+
+STATIC
+UINT32
 CheckMiscEntries (
   IN  OC_GLOBAL_CONFIG  *Config
   )
@@ -329,6 +395,7 @@ CheckMiscEntries (
   CONST CHAR8       *AsciiName;
   CONST CHAR16      *UnicodeName;
   CONST CHAR8       *Path;
+  CONST CHAR8       *Flavour;
 
   ErrorCount        = 0;
   UserMisc          = &Config->Misc;
@@ -338,6 +405,7 @@ CheckMiscEntries (
     Comment         = OC_BLOB_GET (&UserMisc->Entries.Values[Index]->Comment);
     AsciiName       = OC_BLOB_GET (&UserMisc->Entries.Values[Index]->Name);
     Path            = OC_BLOB_GET (&UserMisc->Entries.Values[Index]->Path);
+    Flavour         = OC_BLOB_GET (&UserMisc->Entries.Values[Index]->Flavour);
 
     //
     // Sanitise strings.
@@ -371,6 +439,8 @@ CheckMiscEntries (
       DEBUG ((DEBUG_WARN, "Misc->Entries[%u]->Path contains illegal character!\n", Index));
       ++ErrorCount;
     }
+
+    ErrorCount += ValidateFlavour("Entries", Index, Flavour);
   }
 
   //
@@ -491,6 +561,7 @@ CheckMiscTools (
   CONST CHAR8       *AsciiName;
   CONST CHAR16      *UnicodeName;
   CONST CHAR8       *Path;
+  CONST CHAR8       *Flavour;
 
   ErrorCount        = 0;
   UserMisc          = &Config->Misc;
@@ -500,6 +571,7 @@ CheckMiscTools (
     Comment         = OC_BLOB_GET (&UserMisc->Tools.Values[Index]->Comment);
     AsciiName       = OC_BLOB_GET (&UserMisc->Tools.Values[Index]->Name);
     Path            = OC_BLOB_GET (&UserMisc->Tools.Values[Index]->Path);
+    Flavour         = OC_BLOB_GET (&UserMisc->Tools.Values[Index]->Flavour);
 
     //
     // Sanitise strings.
@@ -515,7 +587,15 @@ CheckMiscTools (
       DEBUG ((DEBUG_WARN, "Misc->Tools[%u]->Comment contains illegal character!\n", Index));
       ++ErrorCount;
     }
-    
+
+    //
+    // Check the length of path relative to OC directory.
+    //
+    if (StrLen (OPEN_CORE_TOOL_PATH) + AsciiStrSize (Path) > OC_STORAGE_SAFE_PATH_MAX) {
+      DEBUG ((DEBUG_WARN, "Misc->Tools[%u]->Path is too long (should not exceed %u)!\n", Index, OC_STORAGE_SAFE_PATH_MAX));
+      ++ErrorCount;
+    }
+
     UnicodeName = AsciiStrCopyToUnicode (AsciiName, 0);
     if (UnicodeName != NULL) {
       if (!UnicodeIsFilteredString (UnicodeName, TRUE)) {
@@ -533,6 +613,8 @@ CheckMiscTools (
       DEBUG ((DEBUG_WARN, "Misc->Tools[%u]->Path contains illegal character!\n", Index));
       ++ErrorCount;
     }
+
+    ErrorCount += ValidateFlavour("Tools", Index, Flavour);
   }
 
   //

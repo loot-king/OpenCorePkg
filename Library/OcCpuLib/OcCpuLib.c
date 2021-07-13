@@ -22,6 +22,7 @@
 #include <Library/DebugLib.h>
 #include <Library/OcCpuLib.h>
 #include <Library/OcGuardLib.h>
+#include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <IndustryStandard/ProcessorInfo.h>
 #include <Register/Microcode.h>
@@ -546,7 +547,8 @@ ScanIntelProcessor (
   if (Cpu->MaxId >= CPUID_CACHE_PARAMS
     && (Cpu->CpuGeneration == OcCpuGenerationPrePenryn
     || Cpu->CpuGeneration == OcCpuGenerationPenryn
-    || Cpu->CpuGeneration == OcCpuGenerationBonnel
+    || Cpu->CpuGeneration == OcCpuGenerationBonnell
+    || Cpu->CpuGeneration == OcCpuGenerationSilvermont
     || Cpu->Hypervisor)) {
     AsmCpuidEx (CPUID_CACHE_PARAMS, 0, &CpuidCacheEax.Uint32, &CpuidCacheEbx.Uint32, NULL, NULL);
     if (CpuidCacheEax.Bits.CacheType != CPUID_CACHE_PARAMS_CACHE_TYPE_NULL) {
@@ -736,11 +738,10 @@ ScanAmdProcessor (
   }
 }
 
-/** Scan the processor and fill the cpu info structure with results
+/**
+  Scan the processor and fill the cpu info structure with results.
 
-  @param[in] Cpu  A pointer to the cpu info structure to fill with results
-
-  @retval EFI_SUCCESS  The scan was completed successfully.
+  @param[in,out] Cpu  A pointer to the cpu info structure to fill with results.
 **/
 VOID
 OcCpuScanProcessor (
@@ -958,6 +959,178 @@ OcCpuScanProcessor (
 }
 
 VOID
+OcCpuGetMsrReport (
+  IN  OC_CPU_INFO        *CpuInfo,
+  OUT OC_CPU_MSR_REPORT  *Report
+  )
+{
+  ASSERT (CpuInfo != NULL);
+  ASSERT (Report  != NULL);
+
+  ZeroMem (Report, sizeof (*Report));
+
+  //
+  // The CPU model must be Intel, as MSRs are not available on other platforms.
+  //
+  if (CpuInfo->Vendor[0] != CPUID_VENDOR_INTEL) {
+    return;
+  }
+
+  if (CpuInfo->CpuGeneration >= OcCpuGenerationNehalem) {
+    //
+    // MSR_PLATFORM_INFO
+    //
+    Report->CpuHasMsrPlatformInfo   = TRUE;
+    Report->CpuMsrPlatformInfoValue = AsmReadMsr64 (MSR_NEHALEM_PLATFORM_INFO);
+
+    //
+    // MSR_TURBO_RATIO_LIMIT
+    //
+    Report->CpuHasMsrTurboRatioLimit   = TRUE;
+    Report->CpuMsrTurboRatioLimitValue = AsmReadMsr64 (MSR_NEHALEM_TURBO_RATIO_LIMIT);
+
+    if (CpuInfo->CpuGeneration >= OcCpuGenerationSandyBridge) {
+      //
+      // MSR_PKG_POWER_INFO (TODO: To be confirmed)
+      //
+      Report->CpuHasMsrPkgPowerInfo   = TRUE;
+      Report->CpuMsrPkgPowerInfoValue = AsmReadMsr64 (MSR_GOLDMONT_PKG_POWER_INFO);
+    
+      //
+      // MSR_BROADWELL_PKG_CST_CONFIG_CONTROL_REGISTER (MSR 0xE2)
+      //
+      Report->CpuHasMsrE2   = TRUE;
+      Report->CpuMsrE2Value = AsmReadMsr64 (MSR_BROADWELL_PKG_CST_CONFIG_CONTROL);
+    }
+  } else if (CpuInfo->CpuGeneration >= OcCpuGenerationPrePenryn) {
+    //
+    // MSR_IA32_MISC_ENABLE
+    //
+    Report->CpuHasMsrIa32MiscEnable   = TRUE;
+    Report->CpuMsrIa32MiscEnableValue = AsmReadMsr64 (MSR_IA32_MISC_ENABLES);
+
+    //
+    // MSR_IA32_EXT_CONFIG
+    //
+    Report->CpuHasMsrIa32ExtConfig   = TRUE;
+    Report->CpuMsrIa32ExtConfigValue = AsmReadMsr64 (MSR_IA32_EXT_CONFIG);
+
+    //
+    // MSR_CORE_FSB_FREQ
+    //
+    Report->CpuHasMsrFsbFreq   = TRUE;
+    Report->CpuMsrFsbFreqValue = AsmReadMsr64 (MSR_CORE_FSB_FREQ);
+
+    //
+    // MSR_IA32_PERF_STATUS
+    //
+    Report->CpuHasMsrIa32PerfStatus   = TRUE;
+    Report->CpuMsrIa32PerfStatusValue = AsmReadMsr64 (MSR_IA32_PERF_STATUS);
+  }
+}
+
+VOID
+EFIAPI
+OcCpuGetMsrReportPerCore (
+  IN OUT VOID  *Buffer
+  )
+{
+  OC_CPU_MSR_REPORT_PROCEDURE_ARGUMENT  *Argument;
+  EFI_STATUS                            Status;
+  UINTN                                 CoreIndex;
+
+  Argument = (OC_CPU_MSR_REPORT_PROCEDURE_ARGUMENT *) Buffer;
+
+  Status = Argument->MpServices->WhoAmI (
+    Argument->MpServices,
+    &CoreIndex
+    );
+  if (EFI_ERROR (Status)) {
+    return;
+  }
+
+  OcCpuGetMsrReport (Argument->CpuInfo, &Argument->Reports[CoreIndex]);
+}
+
+OC_CPU_MSR_REPORT *
+OcCpuGetMsrReports (
+  IN  OC_CPU_INFO        *CpuInfo,
+  OUT UINTN              *EntryCount
+  )
+{
+  OC_CPU_MSR_REPORT                     *Reports;
+  EFI_STATUS                            Status;
+  EFI_MP_SERVICES_PROTOCOL              *MpServices;
+  UINTN                                 NumberOfProcessors;
+  UINTN                                 NumberOfEnabledProcessors;
+  OC_CPU_MSR_REPORT_PROCEDURE_ARGUMENT  Argument;
+
+  ASSERT (CpuInfo    != NULL);
+  ASSERT (EntryCount != NULL);
+
+  MpServices = NULL;
+
+  Status = gBS->LocateProtocol (
+    &gEfiMpServiceProtocolGuid,
+    NULL,
+    (VOID **) &MpServices
+    );
+  if (!EFI_ERROR (Status)) {
+    Status = MpServices->GetNumberOfProcessors (
+      MpServices,
+      &NumberOfProcessors,
+      &NumberOfEnabledProcessors
+      );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_INFO, "OCCPU: Failed to get the number of processors - %r, assuming one core\n", Status));
+      NumberOfProcessors = 1;
+    }
+  } else {
+    DEBUG ((DEBUG_INFO, "OCCPU: Failed to find mp services - %r, assuming one core\n", Status));
+    MpServices         = NULL;
+    NumberOfProcessors = 1;
+  }
+
+  Reports = (OC_CPU_MSR_REPORT *) AllocateZeroPool (NumberOfProcessors * sizeof (OC_CPU_MSR_REPORT));
+  if (Reports == NULL) {
+    return NULL;
+  }
+
+  //
+  // Call OcCpuGetMsrReport on the 0th member firstly.
+  //
+  OcCpuGetMsrReport (CpuInfo, &Reports[0]);
+  //
+  // Then call StartupAllAPs to fill in the rest.
+  //
+  if (MpServices != NULL) {
+    //
+    // Pass data to the wrapped Argument.
+    //
+    Argument.MpServices = MpServices;
+    Argument.Reports    = Reports;
+    Argument.CpuInfo    = CpuInfo;
+
+    Status = MpServices->StartupAllAPs (
+      MpServices,
+      OcCpuGetMsrReportPerCore,
+      TRUE,
+      NULL,
+      5000000,
+      &Argument,
+      NULL
+      );
+  }
+
+  //
+  // Update number of cores.
+  //
+  *EntryCount = NumberOfProcessors;
+
+  return Reports;
+}
+
+VOID
 OcCpuCorrectFlexRatio (
   IN OC_CPU_INFO  *Cpu
   )
@@ -966,9 +1139,8 @@ OcCpuCorrectFlexRatio (
   UINT64  FlexRatio;
 
   if (Cpu->Vendor[0] == CPUID_VENDOR_INTEL
-    && Cpu->Model != CPU_MODEL_GOLDMONT
-    && Cpu->Model != CPU_MODEL_AIRMONT
-    && Cpu->Model != CPU_MODEL_AVOTON) {
+    && Cpu->CpuGeneration != OcCpuGenerationBonnell
+    && Cpu->CpuGeneration != OcCpuGenerationSilvermont) {
     Msr = AsmReadMsr64 (MSR_FLEX_RATIO);
     if (Msr & FLEX_RATIO_EN) {
       FlexRatio = BitFieldRead64 (Msr, 8, 15);
@@ -1115,7 +1287,8 @@ InternalDetectIntelProcessorGeneration (
         break;
       case CPU_MODEL_BONNELL:
       case CPU_MODEL_BONNELL_MID:
-        CpuGeneration = OcCpuGenerationBonnel;
+      case CPU_MODEL_AVOTON: /* perhaps should be distinct */
+        CpuGeneration = OcCpuGenerationBonnell;
         break;
       case CPU_MODEL_DALES_32NM:
       case CPU_MODEL_WESTMERE:
@@ -1125,6 +1298,11 @@ InternalDetectIntelProcessorGeneration (
       case CPU_MODEL_SANDYBRIDGE:
       case CPU_MODEL_JAKETOWN:
         CpuGeneration = OcCpuGenerationSandyBridge;
+        break;
+      case CPU_MODEL_SILVERMONT:
+      case CPU_MODEL_GOLDMONT:
+      case CPU_MODEL_AIRMONT:
+        CpuGeneration = OcCpuGenerationSilvermont;
         break;
       case CPU_MODEL_IVYBRIDGE:
       case CPU_MODEL_IVYBRIDGE_EP:

@@ -13,9 +13,10 @@
 
 #include <Library/OcBootManagementLib.h>
 
-#define MAX_CURSOR_DIMENSION  144U
-
 #define BOOT_CURSOR_OFFSET  4U
+
+#define MAX_CURSOR_DIMENSION  144U
+#define MIN_CURSOR_DIMENSION  BOOT_CURSOR_OFFSET
 
 #define BOOT_ENTRY_DIMENSION          144U
 #define BOOT_ENTRY_ICON_DIMENSION     APPLE_DISK_ICON_DIMENSION
@@ -63,6 +64,8 @@ typedef enum {
   LABEL_TOOL,
   LABEL_RESET_NVRAM,
   LABEL_SHELL,
+  LABEL_SIP_IS_ENABLED,
+  LABEL_SIP_IS_DISABLED,
   LABEL_NUM_TOTAL
 } LABEL_TARGET;
 
@@ -114,6 +117,7 @@ typedef struct _BOOT_PICKER_GUI_CONTEXT {
   GUI_IMAGE                            Labels[LABEL_NUM_TOTAL];
   // GUI_IMAGE                         Poof[5];
   GUI_FONT_CONTEXT                     FontContext;
+  CONST CHAR8                          *Prefix;
   VOID                                 *BootEntry;
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL_UNION  BackgroundColor;
   BOOLEAN                              HideAuxiliary;
@@ -173,6 +177,18 @@ BootPickerViewDeinitialize (
 CONST GUI_IMAGE *
 InternalGetCursorImage (
   IN BOOT_PICKER_GUI_CONTEXT  *Context
+  );
+
+EFI_STATUS
+InternalGetFlavourIcon (
+  IN  BOOT_PICKER_GUI_CONTEXT       *GuiContext,
+  IN  OC_STORAGE_CONTEXT            *Storage,
+  IN  CHAR8                         *FlavourName,
+  IN  UINTN                         FlavourNameLen,
+  IN  UINT32                        IconTypeIndex,
+  IN  BOOLEAN                       UseFlavourIcon,
+  OUT GUI_IMAGE                     *EntryIcon,
+  OUT BOOLEAN                       *CustomIcon
   );
 
 #endif // GUI_APP_H

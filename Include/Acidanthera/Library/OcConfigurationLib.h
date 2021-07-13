@@ -84,7 +84,8 @@
   _(BOOLEAN                     , NormalizeHeaders    ,     , FALSE  , ()) \
   _(BOOLEAN                     , RebaseRegions       ,     , FALSE  , ()) \
   _(BOOLEAN                     , ResetHwSig          ,     , FALSE  , ()) \
-  _(BOOLEAN                     , ResetLogoStatus     ,     , FALSE  , ())
+  _(BOOLEAN                     , ResetLogoStatus     ,     , FALSE  , ()) \
+  _(BOOLEAN                     , SyncTableIds        ,     , FALSE  , ())
   OC_DECLARE (OC_ACPI_QUIRKS)
 
 #define OC_ACPI_CONFIG_FIELDS(_, __) \
@@ -293,6 +294,7 @@
   _(BOOLEAN                     , LegacyCommpage              ,     , FALSE  , ()) \
   _(BOOLEAN                     , PanicNoKextDump             ,     , FALSE  , ()) \
   _(BOOLEAN                     , PowerTimeoutKernelPanic     ,     , FALSE  , ()) \
+  _(BOOLEAN                     , ProvideCurrentCpuInfo       ,     , FALSE  , ()) \
   _(BOOLEAN                     , ThirdPartyDrives            ,     , FALSE  , ()) \
   _(BOOLEAN                     , XhciPortLimit               ,     , FALSE  , ())
   OC_DECLARE (OC_KERNEL_QUIRKS)
@@ -303,6 +305,7 @@
 #define OC_KERNEL_SCHEME_FIELDS(_, __) \
   _(OC_STRING                   , KernelArch       ,     , OC_STRING_CONSTR ("Auto", _, __), OC_DESTR (OC_STRING)) \
   _(OC_STRING                   , KernelCache      ,     , OC_STRING_CONSTR ("Auto", _, __), OC_DESTR (OC_STRING)) \
+  _(BOOLEAN                     , CustomKernel     ,     , FALSE  , ()) \
   _(BOOLEAN                     , FuzzyMatch       ,     , FALSE  , ())
   OC_DECLARE (OC_KERNEL_SCHEME)
 
@@ -373,6 +376,7 @@ typedef enum {
   _(UINT32                      , ExposeSensitiveData         ,      , OCS_EXPOSE_VERSION      , ()) \
   _(BOOLEAN                     , AllowNvramReset             ,      , FALSE                   , ()) \
   _(BOOLEAN                     , AllowSetDefault             ,      , FALSE                   , ()) \
+  _(BOOLEAN                     , AllowToggleSip              ,      , FALSE                   , ()) \
   _(BOOLEAN                     , AuthRestart                 ,      , FALSE                   , ()) \
   _(BOOLEAN                     , BlacklistAppleUpdate        ,      , FALSE                   , ()) \
   _(BOOLEAN                     , EnablePassword              ,      , FALSE                   , ()) \
@@ -386,6 +390,7 @@ typedef enum {
 #define OC_MISC_TOOLS_ENTRY_FIELDS(_, __) \
   _(OC_STRING                   , Arguments        ,     , OC_STRING_CONSTR ("", _, __), OC_DESTR (OC_STRING) ) \
   _(OC_STRING                   , Comment          ,     , OC_STRING_CONSTR ("", _, __), OC_DESTR (OC_STRING) ) \
+  _(OC_STRING                   , Flavour          ,     , OC_STRING_CONSTR ("Auto", _, __), OC_DESTR (OC_STRING) ) \
   _(BOOLEAN                     , Auxiliary        ,     , FALSE                       , ()                   ) \
   _(BOOLEAN                     , Enabled          ,     , FALSE                       , ()                   ) \
   _(BOOLEAN                     , RealPath         ,     , FALSE                       , ()                   ) \
@@ -456,7 +461,7 @@ typedef enum {
   _(UINT16                      , ProcessorType      ,     , 0                                            , () )                   \
   _(UINT8                       , Rom                , [6] , {0}                                          , () )                   \
   _(BOOLEAN                     , SpoofVendor        ,     , FALSE                                        , () )                   \
-  _(BOOLEAN                     , AdviseWindows      ,     , FALSE                                        , () )                   \
+  _(BOOLEAN                     , AdviseFeatures     ,     , FALSE                                        , () )                   \
   _(BOOLEAN                     , MaxBIOSVersion     ,     , FALSE                                        , () )
   OC_DECLARE (OC_PLATFORM_GENERIC_CONFIG)
 
@@ -586,12 +591,13 @@ typedef enum {
 /// AppleInput is a set of options to configure OpenCore's reverse engingeered then customised implementation of the AppleEvent protocol.
 ///
 #define OC_UEFI_APPLEINPUT_FIELDS(_, __) \
-  _(OC_STRING                   , AppleEvent         ,     , OC_STRING_CONSTR ("Auto", _, __)  , OC_DESTR (OC_STRING) ) \
-  _(BOOLEAN                     , CustomDelays       ,     , FALSE                             , ()) \
-  _(UINT16                      , KeyInitialDelay    ,     , 50                                , ()) \
-  _(UINT16                      , KeySubsequentDelay ,     , 5                                 , ()) \
-  _(UINT16                      , PointerSpeedDiv    ,     , 1                                 , ()) \
-  _(UINT16                      , PointerSpeedMul    ,     , 1                                 , ())
+  _(OC_STRING                   , AppleEvent            ,     , OC_STRING_CONSTR ("Auto", _, __)  , OC_DESTR (OC_STRING) ) \
+  _(BOOLEAN                     , CustomDelays          ,     , FALSE                             , ()) \
+  _(UINT16                      , KeyInitialDelay       ,     , 50                                , ()) \
+  _(UINT16                      , KeySubsequentDelay    ,     , 5                                 , ()) \
+  _(BOOLEAN                     , GraphicsInputMirroring,     , FALSE                             , ()) \
+  _(UINT16                      , PointerSpeedDiv       ,     , 1                                 , ()) \
+  _(UINT16                      , PointerSpeedMul       ,     , 1                                 , ())
   OC_DECLARE (OC_UEFI_APPLEINPUT)
 
 ///
@@ -630,6 +636,7 @@ typedef enum {
   _(OC_STRING                   , ConsoleMode                 ,     , OC_STRING_CONSTR ("", _, __), OC_DESTR (OC_STRING)) \
   _(OC_STRING                   , Resolution                  ,     , OC_STRING_CONSTR ("", _, __), OC_DESTR (OC_STRING)) \
   _(OC_STRING                   , TextRenderer                ,     , OC_STRING_CONSTR ("", _, __), OC_DESTR (OC_STRING)) \
+  _(OC_STRING                   , GopPassThrough              ,     , OC_STRING_CONSTR ("Disabled", _, __), OC_DESTR (OC_STRING)) \
   _(BOOLEAN                     , IgnoreTextInGraphics        ,     , FALSE  , ()) \
   _(BOOLEAN                     , ClearScreenOnModeSwitch     ,     , FALSE  , ()) \
   _(BOOLEAN                     , ProvideConsoleGop           ,     , FALSE  , ()) \
@@ -637,7 +644,6 @@ typedef enum {
   _(BOOLEAN                     , ReconnectOnResChange        ,     , FALSE  , ()) \
   _(BOOLEAN                     , SanitiseClearScreen         ,     , FALSE  , ()) \
   _(BOOLEAN                     , UgaPassThrough              ,     , FALSE  , ()) \
-  _(BOOLEAN                     , GopPassThrough              ,     , FALSE  , ()) \
   _(BOOLEAN                     , DirectGopRendering          ,     , FALSE  , ()) \
   _(BOOLEAN                     , ForceResolution             ,     , FALSE  , ())
   OC_DECLARE (OC_UEFI_OUTPUT)
@@ -649,6 +655,7 @@ typedef enum {
   _(BOOLEAN                     , AppleAudio                  ,     , FALSE  , ()) \
   _(BOOLEAN                     , AppleBootPolicy             ,     , FALSE  , ()) \
   _(BOOLEAN                     , AppleDebugLog               ,     , FALSE  , ()) \
+  _(BOOLEAN                     , AppleEg2Info                ,     , FALSE  , ()) \
   _(BOOLEAN                     , AppleFramebufferInfo        ,     , FALSE  , ()) \
   _(BOOLEAN                     , AppleImageConversion        ,     , FALSE  , ()) \
   _(BOOLEAN                     , AppleImg4Verification       ,     , FALSE  , ()) \

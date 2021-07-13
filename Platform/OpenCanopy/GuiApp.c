@@ -44,7 +44,9 @@ mLabelNames[LABEL_NUM_TOTAL] = {
   [LABEL_OTHER]                = "Other",
   [LABEL_TOOL]                 = "Tool",
   [LABEL_RESET_NVRAM]          = "ResetNVRAM",
-  [LABEL_SHELL]                = "Shell"
+  [LABEL_SHELL]                = "Shell",
+  [LABEL_SIP_IS_ENABLED]       = "SIPEnabled",
+  [LABEL_SIP_IS_DISABLED]      = "SIPDisabled"
 };
 
 STATIC
@@ -145,7 +147,7 @@ LoadImageFileFromStorage (
     Status = OcUnicodeSafeSPrint (
       Path,
       sizeof (Path),
-      OPEN_CORE_IMAGE_PATH L"%a%a%a.icns",
+      OPEN_CORE_IMAGE_PATH L"%a\\%a%a.icns",
       Prefix,
       Index > 0 ? "Ext" : "",
       ImageFilePath
@@ -155,6 +157,7 @@ LoadImageFileFromStorage (
       return EFI_OUT_OF_RESOURCES;
     }
 
+    UnicodeUefiSlashes (Path);
     Status = EFI_NOT_FOUND;
     if (OcStorageExistsFileUnicode (Storage, Path)) {
       FileData = OcStorageReadFileUnicode (Storage, Path, &FileSize);
@@ -278,6 +281,106 @@ LoadLabelFromStorage (
 }
 
 EFI_STATUS
+InternalGetFlavourIcon (
+  IN  BOOT_PICKER_GUI_CONTEXT       *GuiContext,
+  IN  OC_STORAGE_CONTEXT            *Storage,
+  IN  CHAR8                         *FlavourName,
+  IN  UINTN                         FlavourNameLen,
+  IN  UINT32                        IconTypeIndex,
+  IN  BOOLEAN                       UseFlavourIcon,
+  OUT GUI_IMAGE                     *EntryIcon,
+  OUT BOOLEAN                       *CustomIcon
+  )
+{
+  EFI_STATUS              Status;
+  CHAR16                  Path[OC_STORAGE_SAFE_PATH_MAX];
+  CHAR8                   ImageName[OC_MAX_CONTENT_FLAVOUR_SIZE];
+  UINT8                   *FileData;
+  UINT32                  FileSize;
+  UINTN                   Index;
+
+  ASSERT (EntryIcon != NULL);
+  ASSERT (CustomIcon != NULL);
+
+  if (FlavourNameLen == 0 ||
+    OcAsciiStrniCmp (FlavourName, OC_FLAVOUR_AUTO, FlavourNameLen) == 0
+    ) {
+    return EFI_UNSUPPORTED;
+  }
+
+  //
+  // Look in preloaded icons
+  //
+  for (Index = ICON_NUM_SYS; Index < ICON_NUM_TOTAL; ++Index) {
+    if (OcAsciiStrniCmp (FlavourName, mIconNames[Index], FlavourNameLen) == 0) {
+      if (GuiContext->Icons[Index][IconTypeIndex].Buffer != NULL) {
+        CopyMem (EntryIcon, &GuiContext->Icons[Index][IconTypeIndex], sizeof (*EntryIcon));
+        *CustomIcon = FALSE;
+        return EFI_SUCCESS;
+      }
+      break;
+    }
+  }
+
+  //
+  // Look for custom icon
+  //
+  if (!UseFlavourIcon) {
+    return EFI_NOT_FOUND;
+  }
+
+  AsciiStrnCpyS (ImageName, OC_MAX_CONTENT_FLAVOUR_SIZE, FlavourName, FlavourNameLen);
+  Status = OcUnicodeSafeSPrint (
+    Path,
+    sizeof (Path),
+    OPEN_CORE_IMAGE_PATH L"%a\\%a%a.icns",
+    GuiContext->Prefix,
+    IconTypeIndex > 0 ? "Ext" : "",
+    ImageName
+    );
+
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_WARN, "OCUI: Cannot fit %a\n", ImageName));
+    return Status;
+  }
+
+  UnicodeUefiSlashes (Path);
+  DEBUG ((DEBUG_INFO, "OCUI: Trying flavour icon %s\n", Path));
+
+  Status = EFI_NOT_FOUND;
+  if (OcStorageExistsFileUnicode (Storage, Path)) {
+    FileData = OcStorageReadFileUnicode (Storage, Path, &FileSize);
+    if (FileData != NULL && FileSize > 0) {
+      Status = GuiIcnsToImageIcon (
+        EntryIcon,
+        FileData,
+        FileSize,
+        GuiContext->Scale,
+        BOOT_ENTRY_ICON_DIMENSION,
+        BOOT_ENTRY_ICON_DIMENSION,
+        FALSE
+        );
+    }
+
+    if (FileData != NULL) {
+      FreePool (FileData);
+    }
+
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_WARN, "OCUI: Invalid icon file\n"));
+    }
+  }
+
+  if (!EFI_ERROR (Status)) {
+    ASSERT (EntryIcon->Buffer != NULL);
+    *CustomIcon = TRUE;
+    return EFI_SUCCESS;
+  }
+
+  return EFI_NOT_FOUND;
+}
+
+EFI_STATUS
 InternalContextConstruct (
   OUT BOOT_PICKER_GUI_CONTEXT  *Context,
   IN  OC_STORAGE_CONTEXT       *Storage,
@@ -294,7 +397,6 @@ InternalContextConstruct (
   UINT32                             Index;
   UINT32                             ImageWidth;
   UINT32                             ImageHeight;
-  CONST CHAR8                        *Prefix;
   BOOLEAN                            Result;
   BOOLEAN                            AllowLessSize;
 
@@ -330,14 +432,14 @@ InternalContextConstruct (
 
   if (AsciiStrCmp (Picker->PickerVariant, "Auto") == 0) {
     if (Context->BackgroundColor.Raw == APPLE_COLOR_LIGHT_GRAY) {
-      Prefix = "Old";
+      Context->Prefix = "Acidanthera\\Chardonnay";
     } else {
-      Prefix = "";
+      Context->Prefix = "Acidanthera\\GoldenGate";
     }
   } else if (AsciiStrCmp (Picker->PickerVariant, "Default") == 0) {
-    Prefix = "";
+    Context->Prefix = "Acidanthera\\GoldenGate";
   } else {
-    Prefix = Picker->PickerVariant;
+    Context->Prefix = Picker->PickerVariant;
   }
 
   LoadImageFileFromStorage (
@@ -348,7 +450,7 @@ InternalContextConstruct (
     0,
     0,
     FALSE,
-    Prefix,
+    Context->Prefix,
     FALSE
     );
 
@@ -422,7 +524,7 @@ InternalContextConstruct (
       ImageWidth,
       ImageHeight,
       Index >= ICON_NUM_SYS,
-      Prefix,
+      Context->Prefix,
       AllowLessSize
       );
     if (!EFI_ERROR (Status)) {
@@ -432,6 +534,23 @@ InternalContextConstruct (
           &Context->Icons[Index][ICON_TYPE_BASE],
           &mHighlightPixel
           );
+        if (Index == ICON_SET_DEFAULT) {
+          if (Context->Icons[Index]->Width != Context->Icons[ICON_SELECTOR]->Width) {
+            Status = EFI_UNSUPPORTED;
+            DEBUG ((
+              DEBUG_WARN,
+              "OCUI: %a width %upx != %a width %upx\n",
+              mIconNames[Index],
+              Context->Icons[Index]->Width,
+              mIconNames[ICON_SELECTOR],
+              Context->Icons[ICON_SELECTOR]->Width
+              ));
+            STATIC_ASSERT (
+              ICON_SELECTOR < ICON_SET_DEFAULT,
+              "Selector must be loaded before SetDefault."
+              );
+          }
+        }
       } else if (Index == ICON_GENERIC_HDD
               && Context->Icons[Index][ICON_TYPE_EXTERNAL].Buffer == NULL) {
         //
@@ -445,13 +564,26 @@ InternalContextConstruct (
           ICON_GENERIC_HDD < ICON_NUM_MANDATORY,
           "The base icon should must be cleaned up explicitly."
           );
+      } else if (Index == ICON_CURSOR) {
+        if (Context->Icons[ICON_CURSOR][ICON_TYPE_BASE].Width < MIN_CURSOR_DIMENSION * Context->Scale
+         || Context->Icons[ICON_CURSOR][ICON_TYPE_BASE].Height < MIN_CURSOR_DIMENSION * Context->Scale) {
+          DEBUG ((
+            DEBUG_INFO,
+            "OCUI: Expected at least %dx%d for cursor, actual %dx%d\n",
+             MIN_CURSOR_DIMENSION * Context->Scale,
+             MIN_CURSOR_DIMENSION * Context->Scale,
+             Context->Icons[ICON_CURSOR][ICON_TYPE_BASE].Width,
+             Context->Icons[ICON_CURSOR][ICON_TYPE_BASE].Height
+            ));
+          Status = EFI_UNSUPPORTED;
+        }
       }
     } else {
       ZeroMem (&Context->Icons[Index], sizeof (Context->Icons[Index]));
     }
 
     if (EFI_ERROR (Status) && Index < ICON_NUM_MANDATORY) {
-      DEBUG ((DEBUG_WARN, "OCUI: Failed to load images\n"));
+      DEBUG ((DEBUG_WARN, "OCUI: Failed to load images for %a\n", Context->Prefix));
       InternalContextDestruct (Context);
       return EFI_UNSUPPORTED;
     }

@@ -147,6 +147,7 @@ mAcpiQuirksSchema[] = {
   OC_SCHEMA_BOOLEAN_IN ("RebaseRegions",    OC_GLOBAL_CONFIG, Acpi.Quirks.RebaseRegions),
   OC_SCHEMA_BOOLEAN_IN ("ResetHwSig",       OC_GLOBAL_CONFIG, Acpi.Quirks.ResetHwSig),
   OC_SCHEMA_BOOLEAN_IN ("ResetLogoStatus",  OC_GLOBAL_CONFIG, Acpi.Quirks.ResetLogoStatus),
+  OC_SCHEMA_BOOLEAN_IN ("SyncTableIds",     OC_GLOBAL_CONFIG, Acpi.Quirks.SyncTableIds),
 };
 
 STATIC
@@ -361,6 +362,7 @@ mKernelQuirksSchema[] = {
   OC_SCHEMA_BOOLEAN_IN ("LegacyCommpage",          OC_GLOBAL_CONFIG, Kernel.Quirks.LegacyCommpage),
   OC_SCHEMA_BOOLEAN_IN ("PanicNoKextDump",         OC_GLOBAL_CONFIG, Kernel.Quirks.PanicNoKextDump),
   OC_SCHEMA_BOOLEAN_IN ("PowerTimeoutKernelPanic", OC_GLOBAL_CONFIG, Kernel.Quirks.PowerTimeoutKernelPanic),
+  OC_SCHEMA_BOOLEAN_IN ("ProvideCurrentCpuInfo",   OC_GLOBAL_CONFIG, Kernel.Quirks.ProvideCurrentCpuInfo),
   OC_SCHEMA_INTEGER_IN ("SetApfsTrimTimeout",      OC_GLOBAL_CONFIG, Kernel.Quirks.SetApfsTrimTimeout),
   OC_SCHEMA_BOOLEAN_IN ("ThirdPartyDrives",        OC_GLOBAL_CONFIG, Kernel.Quirks.ThirdPartyDrives),
   OC_SCHEMA_BOOLEAN_IN ("XhciPortLimit",           OC_GLOBAL_CONFIG, Kernel.Quirks.XhciPortLimit),
@@ -369,6 +371,7 @@ mKernelQuirksSchema[] = {
 STATIC
 OC_SCHEMA
 mKernelSchemeSchema[] = {
+  OC_SCHEMA_BOOLEAN_IN ("CustomKernel",       OC_GLOBAL_CONFIG, Kernel.Scheme.CustomKernel),
   OC_SCHEMA_BOOLEAN_IN ("FuzzyMatch",         OC_GLOBAL_CONFIG, Kernel.Scheme.FuzzyMatch),
   OC_SCHEMA_STRING_IN  ("KernelArch",         OC_GLOBAL_CONFIG, Kernel.Scheme.KernelArch),
   OC_SCHEMA_STRING_IN  ("KernelCache",        OC_GLOBAL_CONFIG, Kernel.Scheme.KernelCache),
@@ -430,6 +433,7 @@ OC_SCHEMA
 mMiscConfigurationSecuritySchema[] = {
   OC_SCHEMA_BOOLEAN_IN ("AllowNvramReset",      OC_GLOBAL_CONFIG, Misc.Security.AllowNvramReset),
   OC_SCHEMA_BOOLEAN_IN ("AllowSetDefault",      OC_GLOBAL_CONFIG, Misc.Security.AllowSetDefault),
+  OC_SCHEMA_BOOLEAN_IN ("AllowToggleSip",       OC_GLOBAL_CONFIG, Misc.Security.AllowToggleSip),
   OC_SCHEMA_INTEGER_IN ("ApECID",               OC_GLOBAL_CONFIG, Misc.Security.ApECID),
   OC_SCHEMA_BOOLEAN_IN ("AuthRestart",          OC_GLOBAL_CONFIG, Misc.Security.AuthRestart),
   OC_SCHEMA_BOOLEAN_IN ("BlacklistAppleUpdate", OC_GLOBAL_CONFIG, Misc.Security.BlacklistAppleUpdate),
@@ -451,6 +455,7 @@ mMiscEntriesSchemaEntry[] = {
   OC_SCHEMA_BOOLEAN_IN ("Auxiliary", OC_MISC_TOOLS_ENTRY, Auxiliary),
   OC_SCHEMA_STRING_IN  ("Comment",   OC_MISC_TOOLS_ENTRY, Comment),
   OC_SCHEMA_BOOLEAN_IN ("Enabled",   OC_MISC_TOOLS_ENTRY, Enabled),
+  OC_SCHEMA_STRING_IN  ("Flavour",   OC_MISC_TOOLS_ENTRY, Flavour),
   OC_SCHEMA_STRING_IN  ("Name",      OC_MISC_TOOLS_ENTRY, Name),
   OC_SCHEMA_STRING_IN  ("Path",      OC_MISC_TOOLS_ENTRY, Path),
   OC_SCHEMA_BOOLEAN_IN ("TextMode",  OC_MISC_TOOLS_ENTRY, TextMode),
@@ -467,6 +472,7 @@ mMiscToolsSchemaEntry[] = {
   OC_SCHEMA_BOOLEAN_IN ("Auxiliary", OC_MISC_TOOLS_ENTRY, Auxiliary),
   OC_SCHEMA_STRING_IN  ("Comment",   OC_MISC_TOOLS_ENTRY, Comment),
   OC_SCHEMA_BOOLEAN_IN ("Enabled",   OC_MISC_TOOLS_ENTRY, Enabled),
+  OC_SCHEMA_STRING_IN  ("Flavour",   OC_MISC_TOOLS_ENTRY, Flavour),
   OC_SCHEMA_STRING_IN  ("Name",      OC_MISC_TOOLS_ENTRY, Name),
   OC_SCHEMA_STRING_IN  ("Path",      OC_MISC_TOOLS_ENTRY, Path),
   OC_SCHEMA_BOOLEAN_IN ("RealPath",  OC_MISC_TOOLS_ENTRY, RealPath),
@@ -552,7 +558,7 @@ mPlatformConfigurationDataHubSchema[] = {
 STATIC
 OC_SCHEMA
 mPlatformConfigurationGenericSchema[] = {
-  OC_SCHEMA_BOOLEAN_IN ("AdviseWindows",      OC_GLOBAL_CONFIG, PlatformInfo.Generic.AdviseWindows),
+  OC_SCHEMA_BOOLEAN_IN ("AdviseFeatures",     OC_GLOBAL_CONFIG, PlatformInfo.Generic.AdviseFeatures),
   OC_SCHEMA_STRING_IN  ("MLB",                OC_GLOBAL_CONFIG, PlatformInfo.Generic.Mlb),
   OC_SCHEMA_BOOLEAN_IN ("MaxBIOSVersion",     OC_GLOBAL_CONFIG, PlatformInfo.Generic.MaxBIOSVersion),
   OC_SCHEMA_INTEGER_IN ("ProcessorType",      OC_GLOBAL_CONFIG, PlatformInfo.Generic.ProcessorType),
@@ -685,6 +691,7 @@ mUefiProtocolOverridesSchema[] = {
   OC_SCHEMA_BOOLEAN_IN ("AppleAudio",              OC_GLOBAL_CONFIG, Uefi.ProtocolOverrides.AppleAudio),
   OC_SCHEMA_BOOLEAN_IN ("AppleBootPolicy",         OC_GLOBAL_CONFIG, Uefi.ProtocolOverrides.AppleBootPolicy),
   OC_SCHEMA_BOOLEAN_IN ("AppleDebugLog",           OC_GLOBAL_CONFIG, Uefi.ProtocolOverrides.AppleDebugLog),
+  OC_SCHEMA_BOOLEAN_IN ("AppleEg2Info",            OC_GLOBAL_CONFIG, Uefi.ProtocolOverrides.AppleEg2Info),
   OC_SCHEMA_BOOLEAN_IN ("AppleFramebufferInfo",    OC_GLOBAL_CONFIG, Uefi.ProtocolOverrides.AppleFramebufferInfo),
   OC_SCHEMA_BOOLEAN_IN ("AppleImageConversion",    OC_GLOBAL_CONFIG, Uefi.ProtocolOverrides.AppleImageConversion),
   OC_SCHEMA_BOOLEAN_IN ("AppleImg4Verification",   OC_GLOBAL_CONFIG, Uefi.ProtocolOverrides.AppleImg4Verification),
@@ -717,6 +724,7 @@ OC_SCHEMA
 mUefiAppleInputSchema[] = {
   OC_SCHEMA_STRING_IN   ("AppleEvent",              OC_GLOBAL_CONFIG,  Uefi.AppleInput.AppleEvent),
   OC_SCHEMA_BOOLEAN_IN  ("CustomDelays",            OC_GLOBAL_CONFIG,  Uefi.AppleInput.CustomDelays),
+  OC_SCHEMA_BOOLEAN_IN  ("GraphicsInputMirroring",  OC_GLOBAL_CONFIG,  Uefi.AppleInput.GraphicsInputMirroring),
   OC_SCHEMA_INTEGER_IN  ("KeyInitialDelay",         OC_GLOBAL_CONFIG,  Uefi.AppleInput.KeyInitialDelay),
   OC_SCHEMA_INTEGER_IN  ("KeySubsequentDelay",      OC_GLOBAL_CONFIG,  Uefi.AppleInput.KeySubsequentDelay),
   OC_SCHEMA_INTEGER_IN  ("PointerSpeedDiv",         OC_GLOBAL_CONFIG,  Uefi.AppleInput.PointerSpeedDiv),
@@ -757,7 +765,7 @@ mUefiOutputSchema[] = {
   OC_SCHEMA_STRING_IN  ("ConsoleMode",            OC_GLOBAL_CONFIG, Uefi.Output.ConsoleMode),
   OC_SCHEMA_BOOLEAN_IN ("DirectGopRendering",     OC_GLOBAL_CONFIG, Uefi.Output.DirectGopRendering),
   OC_SCHEMA_BOOLEAN_IN ("ForceResolution",        OC_GLOBAL_CONFIG, Uefi.Output.ForceResolution),
-  OC_SCHEMA_BOOLEAN_IN ("GopPassThrough",         OC_GLOBAL_CONFIG, Uefi.Output.GopPassThrough),
+  OC_SCHEMA_STRING_IN  ("GopPassThrough",         OC_GLOBAL_CONFIG, Uefi.Output.GopPassThrough),
   OC_SCHEMA_BOOLEAN_IN ("IgnoreTextInGraphics",   OC_GLOBAL_CONFIG, Uefi.Output.IgnoreTextInGraphics),
   OC_SCHEMA_BOOLEAN_IN ("ProvideConsoleGop",      OC_GLOBAL_CONFIG, Uefi.Output.ProvideConsoleGop),
   OC_SCHEMA_BOOLEAN_IN ("ReconnectOnResChange",   OC_GLOBAL_CONFIG, Uefi.Output.ReconnectOnResChange),

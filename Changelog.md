@@ -1,5 +1,60 @@
 OpenCore Changelog
 ==================
+#### v0.7.2
+- Fixed OSBundleLibraries/OSBundleLibaries64 handling
+- Added `GraphicsInputMirroring` to fix lost keystrokes in some non-Apple graphical UEFI apps
+
+#### v0.7.1
+- Added `SyncTableIds` quirk to sync modified table OEM identifiers
+- Added CPU Info (MSRs) dumping to `SysReport`
+- Updated builtin firmware versions for SMBIOS and the rest
+- Fixed `PowerTimeoutKernelPanic` on macOS 12
+- Fixed transparency click detection on OpenCanopy boot entries
+- Added PCI device info dumping to `SysReport`
+- Fixed `SetApfsTrimTimeout` on macOS 12
+- Documented requirement for SetDefault.icns width to match Selector.icns width
+- Added explicit warn and safe fallback to builtin picker on failure to match the above
+- Added VSCode source level IDE debug config example to debug docs
+- Added other minor debug docs updates
+- Fixed incorrect timeout of built-in picker on IA32
+- Added support for custom kernels on ESP partition
+- Fixed DEBUG ASSERT on pressing change entry keys with single boot entry in OpenCanopy
+- Added recommended `Apple12` and `Windows11` flavours
+- Added `TpmInfo` tool to DEBUG TPM status
+- Fixed incorrect OpenCanopy initial display when default entry beyond right of screen
+- Fixed `ProvideCurrentCpuInfo` MSR patch on macOS 12
+- Fixed `AppleXcpmForceBoost` patch on macOS 12
+
+#### v0.7.0
+- Fixed NVRAM reset on firmware with write-protected `BootOptionSupport`
+- Improved direct GOP renderer performance for certain cases
+- Added support for display rotation in direct GOP renderer
+- Fixed handling multinode device paths in LoadedImage and elsewhere
+- Changed OpenCanopy image directory to support directory prefixes
+- Changed OpenCanopy preferred image set to `Acidanthera\GoldenGate`
+- Removed `<BOOTPATH>.icns` and `<TOOLPATH>.icns` support
+- Added content flavour system allowing custom boot entry icons compatible across icon packs
+- Added automatic flavour detection for macOS boot entries
+- Added `ProvideCurrentCpuInfo` quirk to provide correct TSC/FSB for Hyper-V virtual machines
+- Added Hyper-V device path expansion to allow setting default boot volume
+- Added `Apple` variant of `GopPassThrough` to handle only `AppleFramebufferInfo` handles
+- Fixed further kernel patches not being processed if a patch was skipped due to arch mismatch
+- Added optional Toggle SIP system boot menu option
+- Added `CsrUtil.efi` tool, similar to Apple `csrutil`
+- Removed support for `<TOOLPATH>.lbl`/`.l2x` pre-drawn entry labels
+- Fixed previous text not cleared before console mode tools and entries in OpenCanopy
+- Fixed DEBUG build crashes with `GopPassThrough` and `UgaPassThrough`
+- Added flavour for memory testing utilities
+- Updated recommended `memtest86` config in sample `.plist` files
+- Defined bootloader flavours
+- Applied own flavour to OC build
+- Added CPU topology fixes to `ProvideCurrentCpuInfo` quirk
+- Updated OC default SIP disabled value
+- Documented SIP values which affect macOS updates
+- Added `csr-data` Apple NVRAM var to docs
+- Fixed file alignment causing codesign issues with CLANGPDB images
+- Replaced `AdviseWindows` with `AdviseFeatures` to support APFS
+
 #### v0.6.9
 - Fixed out-of-sync cursor movement rectangle when loading e.g. CrScreenshotDxe
 - Updated underlying EDK II package to edk2-stable202102
@@ -16,6 +71,10 @@ OpenCore Changelog
 - Added support for case-insensitive argument handling in the UEFI tools
 - Added vector acceleration of SHA-512 and SHA-384 hashing algorithms, thx @MikhailKrichanov
 - Fixed wraparound when using arrow keys in OpenCanopy
+- Updated builtin firmware versions for SMBIOS and the rest
+- Added bundled Linux versions for userspace utilities
+- Fixed fallback SMBIOS `Manufacturer` value to `NO DIMM` for empty slots
+- Fixed assertions when running OpenCanopy with low resolution, will fallbacks to builtin now
 
 #### v0.6.8
 - Switched to VS2019 toolchain for Windows builds

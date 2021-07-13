@@ -125,7 +125,7 @@ OcKernelApplyPatches (
         Arch,
         Is32Bit ? "i386" : "x86_64"
         ));
-      return;
+      continue;
     }
 
     if (!OcMatchDarwinVersion (DarwinVersion, MinKernel, MaxKernel)) {
@@ -339,6 +339,10 @@ OcKernelApplyPatches (
 
     if (Config->Kernel.Quirks.LegacyCommpage) {
       OcKernelApplyQuirk (KernelQuirkLegacyCommpage, CacheType, DarwinVersion, NULL, &KernelPatcher);     
+    }
+
+    if (Config->Kernel.Quirks.ProvideCurrentCpuInfo) {
+      PatchProvideCurrentCpuInfo (&KernelPatcher, CpuInfo, DarwinVersion);  
     }
   }
 }
